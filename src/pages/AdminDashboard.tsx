@@ -12,7 +12,7 @@ import {
   Video,
   Settings
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { toast } from 'react-hot-toast';
 import { 
   BarChart, 
@@ -48,15 +48,12 @@ export const AdminDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // Fetch students
-      const { data: studentsData } = await supabase.from('profiles').select('*').eq('role', 'student');
-      setStudents(studentsData || []);
-
-      // Fetch stats (mocking for now, would be real queries)
+      const data = await api.admin.getStats();
+      setStudents(data.students || []);
       setStats({
-        totalStudents: studentsData?.length || 0,
-        activeStudents: Math.floor((studentsData?.length || 0) * 0.8),
-        totalViews: 1250,
+        totalStudents: data.totalStudents,
+        activeStudents: Math.floor(data.totalStudents * 0.8),
+        totalViews: data.totalViews,
         totalTests: 450,
         avgScore: 85
       });
@@ -70,8 +67,7 @@ export const AdminDashboard: React.FC = () => {
   const deleteStudent = async (id: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا الطالب؟')) return;
     try {
-      const { error } = await supabase.from('profiles').delete().eq('id', id);
-      if (error) throw error;
+      await api.admin.deleteStudent(id);
       toast.success('تم حذف الطالب بنجاح');
       fetchDashboardData();
     } catch (error) {
@@ -208,13 +204,23 @@ const ContentView: React.FC = () => {
     second_test_url: ''
   });
 
+  useEffect(() => {
+    api.content.get(selectedType).then(data => {
+      if (data) {
+        setFormData({
+          video_url: data.video_url || '',
+          goals_url: data.goals_url || '',
+          curriculum_url: data.curriculum_url || '',
+          first_test_url: data.first_test_url || '',
+          second_test_url: data.second_test_url || ''
+        });
+      }
+    });
+  }, [selectedType]);
+
   const handleSave = async () => {
     try {
-      const { error } = await supabase
-        .from('content')
-        .upsert({ type: selectedType, ...formData }, { onConflict: 'type' });
-      
-      if (error) throw error;
+      await api.content.update({ type: selectedType, ...formData });
       toast.success('تم حفظ التغييرات بنجاح');
     } catch (error) {
       toast.error('فشل حفظ التغييرات');

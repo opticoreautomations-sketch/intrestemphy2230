@@ -1,0 +1,193 @@
+import express from "express";
+import { createServer as createViteServer } from "vite";
+import Database from "better-sqlite3";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PORT = Number(process.env.PORT) || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || "physics-platform-secret";
+
+// Initialize Database
+const db = new Database("physics.db");
+db.pragma("journal_mode = WAL");
+
+// Setup Tables
+db.exec(`
+  CREATE TABLE IF NOT EXISTS profiles (
+    id TEXT PRIMARY KEY,
+    full_name TEXT,
+    email TEXT UNIQUE,
+    password TEXT,
+    role TEXT DEFAULT 'student',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS content (
+    type TEXT PRIMARY KEY,
+    video_url TEXT,
+    goals_url TEXT,
+    curriculum_url TEXT,
+    first_test_url TEXT,
+    second_test_url TEXT,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS progress (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id TEXT,
+    content_type TEXT,
+    views INTEGER DEFAULT 0,
+    last_accessed DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(student_id, content_type),
+    FOREIGN KEY(student_id) REFERENCES profiles(id)
+  );
+
+  -- Initial Content
+  INSERT OR IGNORE INTO content (type) VALUES ('open');
+  INSERT OR IGNORE INTO content (type) VALUES ('close');
+`);
+
+const app = express();
+app.use(express.json());
+
+// File Upload Setup
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, "uploads");
+    if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath);
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+const upload = multer({ storage });
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Middleware: Auth
+const authenticate = (req: any, res: any, next: any) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch (err) {
+    res.status(401).json({ error: "Invalid token" });
+  }
+};
+
+// --- API Routes ---
+
+// Auth: Signup
+app.post("/api/auth/signup", async (req, res) => {
+  const { full_name, email, password } = req.body;
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const id = Math.random().toString(36).substring(2, 15);
+  
+  try {
+    db.prepare("INSERT INTO profiles (id, full_name, email, password) VALUES (?, ?, ?, ?)")
+      .run(id, full_name, email, hashedPassword);
+    res.json({ message: "User created" });
+  } catch (err: any) {
+    res.status(400).json({ error: "Email already exists" });
+  }
+});
+
+// Auth: Login
+app.post("/api/auth/login", async (req, res) => {
+  const { email, password } = req.body;
+  const user: any = db.prepare("SELECT * FROM profiles WHERE email = ?").get(email);
+  
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
+  
+  const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET);
+  res.json({ token, user: { id: user.id, full_name: user.full_name, role: user.role, email: user.email } });
+});
+
+// User Profile
+app.get("/api/auth/me", authenticate, (req: any, res) => {
+  const user = db.prepare("SELECT id, full_name, email, role FROM profiles WHERE id = ?").get(req.user.id);
+  res.json(user);
+});
+
+// Content: Get
+app.get("/api/content/:type", authenticate, (req, res) => {
+  const content = db.prepare("SELECT * FROM content WHERE type = ?").get(req.params.type);
+  res.json(content);
+});
+
+// Content: Update (Teacher only)
+app.post("/api/content", authenticate, (req: any, res) => {
+  if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
+  const { type, video_url, goals_url, curriculum_url, first_test_url, second_test_url } = req.body;
+  
+  db.prepare(`
+    UPDATE content 
+    SET video_url = ?, goals_url = ?, curriculum_url = ?, first_test_url = ?, second_test_url = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE type = ?
+  `).run(video_url, goals_url, curriculum_url, first_test_url, second_test_url, type);
+  
+  res.json({ message: "Content updated" });
+});
+
+// Progress: Track View
+app.post("/api/progress/view", authenticate, (req: any, res) => {
+  const { content_type } = req.body;
+  db.prepare(`
+    INSERT INTO progress (student_id, content_type, views) 
+    VALUES (?, ?, 1)
+    ON CONFLICT(student_id, content_type) DO UPDATE SET views = views + 1, last_accessed = CURRENT_TIMESTAMP
+  `).run(req.user.id, content_type);
+  res.json({ message: "View tracked" });
+});
+
+// Admin: Get Stats
+app.get("/api/admin/stats", authenticate, (req: any, res) => {
+  if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
+  
+  const totalStudents = db.prepare("SELECT COUNT(*) as count FROM profiles WHERE role = 'student'").get() as any;
+  const totalViews = db.prepare("SELECT SUM(views) as count FROM progress").get() as any;
+  const students = db.prepare("SELECT id, full_name, email, created_at FROM profiles WHERE role = 'student'").all();
+  
+  res.json({
+    totalStudents: totalStudents.count,
+    totalViews: totalViews.count || 0,
+    students
+  });
+});
+
+// Admin: Delete Student
+app.delete("/api/admin/students/:id", authenticate, (req: any, res) => {
+  if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
+  db.prepare("DELETE FROM profiles WHERE id = ?").run(req.params.id);
+  res.json({ message: "Student deleted" });
+});
+
+// --- Vite Integration ---
+async function startServer() {
+  if (process.env.NODE_ENV !== "production") {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
+  } else {
+    app.use(express.static(path.join(__dirname, "dist")));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(__dirname, "dist", "index.html"));
+    });
+  }
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+startServer();

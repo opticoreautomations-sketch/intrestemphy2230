@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { toast } from 'react-hot-toast';
 import { motion } from 'motion/react';
 import { UserPlus } from 'lucide-react';
@@ -16,26 +16,8 @@ export const SignupPage: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          data: { full_name: fullName }
-        }
-      });
-      
-      if (error) throw error;
-
-      // Create profile entry
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([{ id: data.user.id, full_name: fullName, role: 'student' }]);
-        
-        if (profileError) console.error('Profile creation error:', profileError);
-      }
-
-      toast.success('تم إنشاء الحساب بنجاح! يرجى التحقق من بريدك الإلكتروني');
+      await api.auth.signup({ full_name: fullName, email, password });
+      toast.success('تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول');
       navigate('/login');
     } catch (error: any) {
       toast.error(error.message || 'فشل إنشاء الحساب');

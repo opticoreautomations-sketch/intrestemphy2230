@@ -1,0 +1,8 @@
+node_modules
+dist
+physics.db
+physics.db-journal
+physics.db-wal
+.env
+.git
+README.md

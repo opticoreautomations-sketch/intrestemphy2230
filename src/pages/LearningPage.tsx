@@ -10,7 +10,7 @@ import {
   PlayCircle,
   ExternalLink
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 
@@ -37,13 +37,7 @@ export const LearningPage: React.FC<{ type: 'open' | 'close' }> = ({ type }) => 
 
   const fetchContent = async () => {
     try {
-      const { data, error } = await supabase
-        .from('content')
-        .select('*')
-        .eq('type', type)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
+      const data = await api.content.get(type);
       setContent(data);
     } catch (error: any) {
       console.error('Error fetching content:', error);
@@ -56,9 +50,7 @@ export const LearningPage: React.FC<{ type: 'open' | 'close' }> = ({ type }) => 
   const trackView = async () => {
     if (!user) return;
     try {
-      // Logic to increment view count in Supabase
-      // This would typically involve a stored procedure or an upsert
-      await supabase.rpc('increment_view_count', { content_type: type });
+      await api.progress.trackView(type);
     } catch (error) {
       console.error('Error tracking view:', error);
     }
