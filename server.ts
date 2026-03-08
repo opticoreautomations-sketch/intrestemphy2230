@@ -50,17 +50,15 @@ db.exec(`
   -- Initial Content
   INSERT OR IGNORE INTO content (type) VALUES ('open');
   INSERT OR IGNORE INTO content (type) VALUES ('close');
-
-  -- Default Admin (Teacher)
-  INSERT OR IGNORE INTO profiles (id, full_name, email, password, role) 
-  VALUES ('admin-id', 'Admin Teacher', 'admin@physics.com', '$2a$10$xV.X9W0.X9W0.X9W0.X9W0.X9W0.X9W0.X9W0.X9W0.X9W0.X9W0.', 'teacher');
 `);
 
-// Note: The above hash is a placeholder, I should generate a real one.
-// Actually, let's do it properly in JS after the exec.
+// Default Admin (Teacher)
 const adminPassword = bcrypt.hashSync("admin123", 10);
-db.prepare("INSERT OR IGNORE INTO profiles (id, full_name, email, password, role) VALUES (?, ?, ?, ?, ?)")
-  .run("admin-id", "Admin Teacher", "admin@physics.com", adminPassword, "teacher");
+db.prepare(`
+  INSERT INTO profiles (id, full_name, email, password, role) 
+  VALUES (?, ?, ?, ?, ?)
+  ON CONFLICT(email) DO UPDATE SET password = excluded.password, role = 'teacher'
+`).run("admin-id", "Admin Teacher", "admin@physics.com", adminPassword, "teacher");
 
 const app = express();
 app.use(express.json());
