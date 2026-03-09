@@ -203,6 +203,7 @@ const ContentView: React.FC = () => {
     first_test_url: '',
     second_test_url: ''
   });
+  const [uploading, setUploading] = useState<string | null>(null);
 
   useEffect(() => {
     api.content.get(selectedType).then(data => {
@@ -227,6 +228,19 @@ const ContentView: React.FC = () => {
     }
   };
 
+  const handleFileUpload = async (field: keyof typeof formData, file: File) => {
+    setUploading(field);
+    try {
+      const { url } = await api.admin.upload(file);
+      setFormData(prev => ({ ...prev, [field]: url }));
+      toast.success('تم رفع الملف بنجاح');
+    } catch (error) {
+      toast.error('فشل رفع الملف');
+    } finally {
+      setUploading(null);
+    }
+  };
+
   return (
     <div className="glass-card p-8 max-w-3xl mx-auto">
       <div className="flex gap-4 mb-8">
@@ -245,11 +259,42 @@ const ContentView: React.FC = () => {
       </div>
 
       <div className="space-y-6">
-        <InputGroup label="رابط الفيديو (YouTube/Vimeo)" icon={<Video size={18} />} value={formData.video_url} onChange={(v) => setFormData({...formData, video_url: v})} />
-        <InputGroup label="رابط الأهداف (PDF/File)" icon={<FileUp size={18} />} value={formData.goals_url} onChange={(v) => setFormData({...formData, goals_url: v})} />
-        <InputGroup label="رابط المنهج (PDF/Video)" icon={<FileUp size={18} />} value={formData.curriculum_url} onChange={(v) => setFormData({...formData, curriculum_url: v})} />
-        <InputGroup label="رابط الاختبار الأول" icon={<LinkIcon size={18} />} value={formData.first_test_url} onChange={(v) => setFormData({...formData, first_test_url: v})} />
-        <InputGroup label="رابط الاختبار الثاني" icon={<LinkIcon size={18} />} value={formData.second_test_url} onChange={(v) => setFormData({...formData, second_test_url: v})} />
+        <InputGroup 
+          label="رابط الفيديو (YouTube/Vimeo) أو رفع ملف" 
+          icon={<Video size={18} />} 
+          value={formData.video_url} 
+          onChange={(v) => setFormData({...formData, video_url: v})}
+          onUpload={(file) => handleFileUpload('video_url', file)}
+          isUploading={uploading === 'video_url'}
+        />
+        <InputGroup 
+          label="رابط الأهداف (PDF/File) أو رفع ملف" 
+          icon={<FileUp size={18} />} 
+          value={formData.goals_url} 
+          onChange={(v) => setFormData({...formData, goals_url: v})}
+          onUpload={(file) => handleFileUpload('goals_url', file)}
+          isUploading={uploading === 'goals_url'}
+        />
+        <InputGroup 
+          label="رابط المنهج (PDF/Video) أو رفع ملف" 
+          icon={<FileUp size={18} />} 
+          value={formData.curriculum_url} 
+          onChange={(v) => setFormData({...formData, curriculum_url: v})}
+          onUpload={(file) => handleFileUpload('curriculum_url', file)}
+          isUploading={uploading === 'curriculum_url'}
+        />
+        <InputGroup 
+          label="رابط الاختبار الأول" 
+          icon={<LinkIcon size={18} />} 
+          value={formData.first_test_url} 
+          onChange={(v) => setFormData({...formData, first_test_url: v})} 
+        />
+        <InputGroup 
+          label="رابط الاختبار الثاني" 
+          icon={<LinkIcon size={18} />} 
+          value={formData.second_test_url} 
+          onChange={(v) => setFormData({...formData, second_test_url: v})} 
+        />
         
         <button onClick={handleSave} className="btn-primary w-full mt-8">حفظ التغييرات</button>
       </div>
@@ -257,21 +302,57 @@ const ContentView: React.FC = () => {
   );
 };
 
-const InputGroup: React.FC<{ label: string; icon: React.ReactNode; value: string; onChange: (v: string) => void }> = ({ label, icon, value, onChange }) => (
-  <div className="space-y-2">
-    <label className="text-sm text-white/70 flex items-center gap-2">
-      {icon}
-      {label}
-    </label>
-    <input 
-      type="text" 
-      className="input-field w-full" 
-      placeholder="أدخل الرابط هنا..."
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-    />
-  </div>
-);
+const InputGroup: React.FC<{ 
+  label: string; 
+  icon: React.ReactNode; 
+  value: string; 
+  onChange: (v: string) => void;
+  onUpload?: (file: File) => void;
+  isUploading?: boolean;
+}> = ({ label, icon, value, onChange, onUpload, isUploading }) => {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  return (
+    <div className="space-y-2">
+      <label className="text-sm text-white/70 flex items-center justify-between">
+        <span className="flex items-center gap-2">
+          {icon}
+          {label}
+        </span>
+        {onUpload && (
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="text-xs bg-white/10 hover:bg-white/20 px-2 py-1 rounded flex items-center gap-1 transition-colors disabled:opacity-50"
+          >
+            <FileUp size={12} />
+            {isUploading ? 'جاري الرفع...' : 'رفع ملف'}
+          </button>
+        )}
+      </label>
+      <div className="relative">
+        <input 
+          type="text" 
+          className="input-field w-full pr-10" 
+          placeholder="أدخل الرابط هنا أو ارفع ملفاً..."
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        {onUpload && (
+          <input 
+            type="file" 
+            ref={fileInputRef}
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onUpload(file);
+            }}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
 
 const StudentsView: React.FC<{ students: any[]; onDelete: (id: string) => void }> = ({ students, onDelete }) => (
   <div className="glass-card overflow-hidden">

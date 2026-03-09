@@ -13,6 +13,7 @@ import {
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
+import { getEmbedUrl, isVideoFile } from '../lib/utils';
 
 interface ContentData {
   id: string;
@@ -91,12 +92,21 @@ export const LearningPage: React.FC<{ type: 'open' | 'close' }> = ({ type }) => 
         {/* Video Section */}
         <div className="glass-card overflow-hidden mb-12 aspect-video relative group">
           {content?.video_url ? (
-            <iframe 
-              src={content.video_url} 
-              className="w-full h-full"
-              allowFullScreen
-              title="Physics Lesson"
-            />
+            isVideoFile(content.video_url) ? (
+              <video 
+                src={content.video_url} 
+                className="w-full h-full" 
+                controls 
+                autoPlay
+              />
+            ) : (
+              <iframe 
+                src={getEmbedUrl(content.video_url)} 
+                className="w-full h-full"
+                allowFullScreen
+                title="Physics Lesson"
+              />
+            )
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center bg-white/5">
               <PlayCircle size={64} className="text-white/20 mb-4" />

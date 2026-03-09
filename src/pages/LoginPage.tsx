@@ -63,6 +63,11 @@ export const LoginPage: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            <div className="flex justify-end">
+              <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+                نسيت كلمة المرور؟
+              </Link>
+            </div>
           </div>
           <button 
             type="submit" 

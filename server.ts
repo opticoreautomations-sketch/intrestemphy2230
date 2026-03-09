@@ -119,6 +119,35 @@ app.post("/api/auth/login", async (req, res) => {
   res.json({ token, user: { id: user.id, full_name: user.full_name, role: user.role, email: user.email } });
 });
 
+// Auth: Forgot Password (Mock)
+app.post("/api/auth/forgot-password", (req, res) => {
+  const { email } = req.body;
+  const user = db.prepare("SELECT * FROM profiles WHERE email = ?").get(email);
+  
+  if (!user) {
+    return res.status(404).json({ error: "Email not found" });
+  }
+  
+  // In a real app, we would send an email with a token.
+  // For this app, we'll just return success and allow reset.
+  res.json({ message: "Reset instructions sent to your email (simulated)" });
+});
+
+// Auth: Reset Password
+app.post("/api/auth/reset-password", async (req, res) => {
+  const { email, newPassword } = req.body;
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  
+  const result = db.prepare("UPDATE profiles SET password = ? WHERE email = ?")
+    .run(hashedPassword, email);
+    
+  if (result.changes === 0) {
+    return res.status(404).json({ error: "User not found" });
+  }
+  
+  res.json({ message: "Password updated successfully" });
+});
+
 // User Profile
 app.get("/api/auth/me", authenticate, (req: any, res) => {
   const user = db.prepare("SELECT id, full_name, email, role FROM profiles WHERE id = ?").get(req.user.id);
@@ -176,6 +205,15 @@ app.delete("/api/admin/students/:id", authenticate, (req: any, res) => {
   if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
   db.prepare("DELETE FROM profiles WHERE id = ?").run(req.params.id);
   res.json({ message: "Student deleted" });
+});
+
+// Admin: Upload File
+app.post("/api/admin/upload", authenticate, upload.single("file"), (req: any, res) => {
+  if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+  
+  const fileUrl = `/uploads/${req.file.filename}`;
+  res.json({ url: fileUrl });
 });
 
 // --- Vite Integration ---
