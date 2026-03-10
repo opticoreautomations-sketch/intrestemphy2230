@@ -23,54 +23,32 @@ export const HomePage: React.FC = () => {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Open Video Path */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="glass-card overflow-hidden group"
-          >
-            <div className="h-48 bg-primary/10 flex items-center justify-center relative">
-              <Video size={64} className="text-primary group-hover:scale-110 transition-transform" />
-              <div className="absolute inset-0 bg-gradient-to-t from-dark/80 to-transparent" />
-            </div>
-            <div className="p-8">
-              <h2 className="text-2xl font-bold mb-4">فيديو تفاعلي مفتوح</h2>
-              <p className="text-white/60 mb-6">
-                استكشف المفاهيم الفيزيائية من خلال تجربة فيديو تفاعلية مفتوحة تتيح لك حرية التنقل.
-              </p>
-              <Link 
-                to="/learning/open" 
-                className="btn-primary w-full flex items-center justify-center gap-2"
-              >
-                ابدأ التعلم الآن
-                <ChevronLeft size={20} />
-              </Link>
-            </div>
-          </motion.div>
-
-          {/* Close Video Path */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="glass-card overflow-hidden group"
-          >
-            <div className="h-48 bg-white/5 flex items-center justify-center relative">
-              <VideoOff size={64} className="text-white/40 group-hover:scale-110 transition-transform" />
-              <div className="absolute inset-0 bg-gradient-to-t from-dark/80 to-transparent" />
-            </div>
-            <div className="p-8">
-              <h2 className="text-2xl font-bold mb-4">فيديو تفاعلي مغلق</h2>
-              <p className="text-white/60 mb-6">
-                مسار تعليمي محكم يضمن تسلسل الأفكار وبناء المعرفة خطوة بخطوة.
-              </p>
-              <Link 
-                to="/learning/close" 
-                className="btn-primary w-full flex items-center justify-center gap-2"
-              >
-                ابدأ التعلم الآن
-                <ChevronLeft size={20} />
-              </Link>
-            </div>
-          </motion.div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((num) => (
+            <motion.div
+              key={num}
+              whileHover={{ scale: 1.02 }}
+              className="glass-card overflow-hidden group"
+            >
+              <div className="h-32 bg-primary/10 flex items-center justify-center relative">
+                <GraduationCap size={48} className="text-primary group-hover:scale-110 transition-transform" />
+                <div className="absolute inset-0 bg-gradient-to-t from-dark/80 to-transparent" />
+              </div>
+              <div className="p-6">
+                <h2 className="text-xl font-bold mb-2 text-center">الدرس {num}</h2>
+                <p className="text-white/60 text-sm mb-6 text-center">
+                  محتوى تعليمي شامل للدرس {num} يتضمن فيديو، ملفات، واختبارات.
+                </p>
+                <Link 
+                  to={`/learning/lesson${num}`} 
+                  className="btn-primary w-full flex items-center justify-center gap-2 text-sm py-2"
+                >
+                  ابدأ الدرس
+                  <ChevronLeft size={16} />
+                </Link>
+              </div>
+            </motion.div>
+          ))}
         </div>
 
         <section className="mt-20">

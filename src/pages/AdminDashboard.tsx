@@ -195,33 +195,31 @@ const StatCard: React.FC<{ title: string; value: any; icon: React.ReactNode }> =
 );
 
 const ContentView: React.FC = () => {
-  const [selectedType, setSelectedType] = useState<'open' | 'close'>('open');
+  const [selectedLesson, setSelectedLesson] = useState<'lesson1' | 'lesson2' | 'lesson3' | 'lesson4'>('lesson1');
   const [formData, setFormData] = useState({
     video_url: '',
-    goals_url: '',
-    curriculum_url: '',
-    first_test_url: '',
-    second_test_url: ''
+    pdf_url: '',
+    booklet_url: '',
+    test_url: ''
   });
   const [uploading, setUploading] = useState<string | null>(null);
 
   useEffect(() => {
-    api.content.get(selectedType).then(data => {
+    api.content.get(selectedLesson).then(data => {
       if (data) {
         setFormData({
           video_url: data.video_url || '',
-          goals_url: data.goals_url || '',
-          curriculum_url: data.curriculum_url || '',
-          first_test_url: data.first_test_url || '',
-          second_test_url: data.second_test_url || ''
+          pdf_url: data.pdf_url || '',
+          booklet_url: data.booklet_url || '',
+          test_url: data.test_url || ''
         });
       }
     });
-  }, [selectedType]);
+  }, [selectedLesson]);
 
   const handleSave = async () => {
     try {
-      await api.content.update({ type: selectedType, ...formData });
+      await api.content.update({ type: selectedLesson, ...formData });
       toast.success('تم حفظ التغييرات بنجاح');
     } catch (error) {
       toast.error('فشل حفظ التغييرات');
@@ -243,24 +241,21 @@ const ContentView: React.FC = () => {
 
   return (
     <div className="glass-card p-8 max-w-3xl mx-auto">
-      <div className="flex gap-4 mb-8">
-        <button 
-          onClick={() => setSelectedType('open')}
-          className={`flex-1 py-3 rounded-xl font-bold transition-all ${selectedType === 'open' ? 'bg-primary text-dark' : 'bg-white/5 text-white/60'}`}
-        >
-          الفيديو المفتوح
-        </button>
-        <button 
-          onClick={() => setSelectedType('close')}
-          className={`flex-1 py-3 rounded-xl font-bold transition-all ${selectedType === 'close' ? 'bg-primary text-dark' : 'bg-white/5 text-white/60'}`}
-        >
-          الفيديو المغلق
-        </button>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-8">
+        {[1, 2, 3, 4].map((num) => (
+          <button 
+            key={num}
+            onClick={() => setSelectedLesson(`lesson${num}` as any)}
+            className={`py-3 rounded-xl font-bold transition-all ${selectedLesson === `lesson${num}` ? 'bg-primary text-dark' : 'bg-white/5 text-white/60'}`}
+          >
+            الدرس {num}
+          </button>
+        ))}
       </div>
 
       <div className="space-y-6">
         <InputGroup 
-          label="رابط الفيديو (YouTube/Vimeo) أو رفع ملف" 
+          label="رابط الفيديو (Video)" 
           icon={<Video size={18} />} 
           value={formData.video_url} 
           onChange={(v) => setFormData({...formData, video_url: v})}
@@ -268,32 +263,28 @@ const ContentView: React.FC = () => {
           isUploading={uploading === 'video_url'}
         />
         <InputGroup 
-          label="رابط الأهداف (PDF/File) أو رفع ملف" 
+          label="رابط ملف الـ PDF" 
           icon={<FileUp size={18} />} 
-          value={formData.goals_url} 
-          onChange={(v) => setFormData({...formData, goals_url: v})}
-          onUpload={(file) => handleFileUpload('goals_url', file)}
-          isUploading={uploading === 'goals_url'}
+          value={formData.pdf_url} 
+          onChange={(v) => setFormData({...formData, pdf_url: v})}
+          onUpload={(file) => handleFileUpload('pdf_url', file)}
+          isUploading={uploading === 'pdf_url'}
         />
         <InputGroup 
-          label="رابط المنهج (PDF/Video) أو رفع ملف" 
+          label="رابط الكتيب (Booklet)" 
           icon={<FileUp size={18} />} 
-          value={formData.curriculum_url} 
-          onChange={(v) => setFormData({...formData, curriculum_url: v})}
-          onUpload={(file) => handleFileUpload('curriculum_url', file)}
-          isUploading={uploading === 'curriculum_url'}
+          value={formData.booklet_url} 
+          onChange={(v) => setFormData({...formData, booklet_url: v})}
+          onUpload={(file) => handleFileUpload('booklet_url', file)}
+          isUploading={uploading === 'booklet_url'}
         />
         <InputGroup 
-          label="رابط الاختبار الأول" 
+          label="رابط الاختبار (Test)" 
           icon={<LinkIcon size={18} />} 
-          value={formData.first_test_url} 
-          onChange={(v) => setFormData({...formData, first_test_url: v})} 
-        />
-        <InputGroup 
-          label="رابط الاختبار الثاني" 
-          icon={<LinkIcon size={18} />} 
-          value={formData.second_test_url} 
-          onChange={(v) => setFormData({...formData, second_test_url: v})} 
+          value={formData.test_url} 
+          onChange={(v) => setFormData({...formData, test_url: v})} 
+          onUpload={(file) => handleFileUpload('test_url', file)}
+          isUploading={uploading === 'test_url'}
         />
         
         <button onClick={handleSave} className="btn-primary w-full mt-8">حفظ التغييرات</button>

@@ -30,10 +30,9 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS content (
     type TEXT PRIMARY KEY,
     video_url TEXT,
-    goals_url TEXT,
-    curriculum_url TEXT,
-    first_test_url TEXT,
-    second_test_url TEXT,
+    pdf_url TEXT,
+    booklet_url TEXT,
+    test_url TEXT,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -47,9 +46,11 @@ db.exec(`
     FOREIGN KEY(student_id) REFERENCES profiles(id)
   );
 
-  -- Initial Content
-  INSERT OR IGNORE INTO content (type) VALUES ('open');
-  INSERT OR IGNORE INTO content (type) VALUES ('close');
+  -- Initial Content (4 Lessons)
+  INSERT OR IGNORE INTO content (type) VALUES ('lesson1');
+  INSERT OR IGNORE INTO content (type) VALUES ('lesson2');
+  INSERT OR IGNORE INTO content (type) VALUES ('lesson3');
+  INSERT OR IGNORE INTO content (type) VALUES ('lesson4');
 `);
 
 // Default Admin (Teacher)
@@ -163,13 +164,13 @@ app.get("/api/content/:type", authenticate, (req, res) => {
 // Content: Update (Teacher only)
 app.post("/api/content", authenticate, (req: any, res) => {
   if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
-  const { type, video_url, goals_url, curriculum_url, first_test_url, second_test_url } = req.body;
+  const { type, video_url, pdf_url, booklet_url, test_url } = req.body;
   
   db.prepare(`
     UPDATE content 
-    SET video_url = ?, goals_url = ?, curriculum_url = ?, first_test_url = ?, second_test_url = ?, updated_at = CURRENT_TIMESTAMP
+    SET video_url = ?, pdf_url = ?, booklet_url = ?, test_url = ?, updated_at = CURRENT_TIMESTAMP
     WHERE type = ?
-  `).run(video_url, goals_url, curriculum_url, first_test_url, second_test_url, type);
+  `).run(video_url, pdf_url, booklet_url, test_url, type);
   
   res.json({ message: "Content updated" });
 });

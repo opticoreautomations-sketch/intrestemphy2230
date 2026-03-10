@@ -17,28 +17,30 @@ import { getEmbedUrl, isVideoFile } from '../lib/utils';
 
 interface ContentData {
   id: string;
-  type: 'open' | 'close';
-  goals_url: string;
-  first_test_url: string;
-  curriculum_url: string;
-  second_test_url: string;
+  type: string;
   video_url: string;
+  pdf_url: string;
+  booklet_url: string;
+  test_url: string;
 }
 
-export const LearningPage: React.FC<{ type: 'open' | 'close' }> = ({ type }) => {
+export const LearningPage: React.FC = () => {
+  const { lessonId } = useParams<{ lessonId: string }>();
   const [content, setContent] = useState<ContentData | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchContent();
-    trackView();
-  }, [type]);
+    if (lessonId) {
+      fetchContent();
+      trackView();
+    }
+  }, [lessonId]);
 
   const fetchContent = async () => {
     try {
-      const data = await api.content.get(type);
+      const data = await api.content.get(lessonId!);
       setContent(data);
     } catch (error: any) {
       console.error('Error fetching content:', error);
@@ -49,9 +51,9 @@ export const LearningPage: React.FC<{ type: 'open' | 'close' }> = ({ type }) => 
   };
 
   const trackView = async () => {
-    if (!user) return;
+    if (!user || !lessonId) return;
     try {
-      await api.progress.trackView(type);
+      await api.progress.trackView(lessonId);
     } catch (error) {
       console.error('Error tracking view:', error);
     }
@@ -73,6 +75,8 @@ export const LearningPage: React.FC<{ type: 'open' | 'close' }> = ({ type }) => 
     );
   }
 
+  const lessonNumber = lessonId?.replace('lesson', '');
+
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 physics-bg">
       <div className="max-w-5xl mx-auto">
@@ -85,7 +89,7 @@ export const LearningPage: React.FC<{ type: 'open' | 'close' }> = ({ type }) => 
             العودة للرئيسية
           </button>
           <h1 className="text-2xl font-bold">
-            {type === 'open' ? 'فيديو تفاعلي مفتوح' : 'فيديو تفاعلي مغلق'}
+            الدرس {lessonNumber}
           </h1>
         </div>
 
@@ -116,29 +120,23 @@ export const LearningPage: React.FC<{ type: 'open' | 'close' }> = ({ type }) => 
         </div>
 
         {/* Interactive Icons Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
           <IconButton 
-            icon={<Target size={32} />}
-            label="الأهداف"
-            onClick={() => handleIconClick(content?.goals_url || '', 'الأهداف')}
+            icon={<FileText size={32} />}
+            label="ملف PDF"
+            onClick={() => handleIconClick(content?.pdf_url || '', 'ملف PDF')}
             color="bg-blue-500/20 text-blue-400"
           />
           <IconButton 
-            icon={<ClipboardCheck size={32} />}
-            label="الاختبار الأول"
-            onClick={() => handleIconClick(content?.first_test_url || '', 'الاختبار الأول')}
-            color="bg-green-500/20 text-green-400"
-          />
-          <IconButton 
             icon={<BookOpen size={32} />}
-            label="المنهج"
-            onClick={() => handleIconClick(content?.curriculum_url || '', 'المنهج')}
+            label="الكتيب (Booklet)"
+            onClick={() => handleIconClick(content?.booklet_url || '', 'الكتيب')}
             color="bg-primary/20 text-primary"
           />
           <IconButton 
             icon={<ClipboardCheck size={32} />}
-            label="الاختبار الثاني"
-            onClick={() => handleIconClick(content?.second_test_url || '', 'الاختبار الثاني')}
+            label="الاختبار (Test)"
+            onClick={() => handleIconClick(content?.test_url || '', 'الاختبار')}
             color="bg-purple-500/20 text-purple-400"
           />
         </div>

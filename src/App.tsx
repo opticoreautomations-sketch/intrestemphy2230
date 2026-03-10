@@ -27,8 +27,7 @@ export default function App() {
             {/* Protected Student Routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<HomePage />} />
-              <Route path="/learning/open" element={<LearningPage type="open" />} />
-              <Route path="/learning/close" element={<LearningPage type="close" />} />
+              <Route path="/learning/:lessonId" element={<LearningPage />} />
             </Route>
 
             {/* Protected Admin Routes */}
