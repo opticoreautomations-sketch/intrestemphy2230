@@ -10,7 +10,13 @@ import {
   FileUp, 
   Link as LinkIcon,
   Video,
-  Settings
+  Settings,
+  TrendingUp,
+  ClipboardCheck,
+  BarChart2,
+  PieChart as PieChartIcon,
+  UserCheck,
+  Activity
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { toast } from 'react-hot-toast';
@@ -26,18 +32,13 @@ import {
   Pie,
   Cell,
   LineChart,
-  Line
+  Line,
+  Legend
 } from 'recharts';
 
 export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'stats' | 'content' | 'students'>('stats');
-  const [stats, setStats] = useState({
-    totalStudents: 0,
-    activeStudents: 0,
-    totalViews: 0,
-    totalTests: 0,
-    avgScore: 0
-  });
+  const [stats, setStats] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,13 +51,7 @@ export const AdminDashboard: React.FC = () => {
     try {
       const data = await api.admin.getStats();
       setStudents(data.students || []);
-      setStats({
-        totalStudents: data.totalStudents,
-        activeStudents: Math.floor(data.totalStudents * 0.8),
-        totalViews: data.totalViews,
-        totalTests: 450,
-        avgScore: 85
-      });
+      setStats(data);
     } catch (error) {
       toast.error('فشل تحميل البيانات');
     } finally {
@@ -109,72 +104,126 @@ const TabButton: React.FC<{ active: boolean; onClick: () => void; label: string;
   </button>
 );
 
+const COLORS = ['#00E676', '#00B0FF', '#FF5252', '#FFD600', '#AA00FF'];
+
 const StatsView: React.FC<{ stats: any }> = ({ stats }) => {
-  const chartData = [
-    { name: 'السبت', value: 400 },
-    { name: 'الأحد', value: 300 },
-    { name: 'الاثنين', value: 600 },
-    { name: 'الثلاثاء', value: 800 },
-    { name: 'الأربعاء', value: 500 },
-    { name: 'الخميس', value: 900 },
-    { name: 'الجمعة', value: 200 },
-  ];
-
-  const pieData = [
-    { name: 'مكتمل', value: 400 },
-    { name: 'قيد التقدم', value: 300 },
-    { name: 'لم يبدأ', value: 300 },
-  ];
-
-  const COLORS = ['#FFC107', '#4CAF50', '#F44336'];
+  if (!stats) return null;
 
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <StatCard title="إجمالي الطلاب" value={stats.totalStudents} icon={<Users />} />
-        <StatCard title="الطلاب النشطين" value={stats.activeStudents} icon={<CheckCircle />} />
-        <StatCard title="مشاهدات الفيديو" value={stats.totalViews} icon={<Eye />} />
-        <StatCard title="الاختبارات المنجزة" value={stats.totalTests} icon={<ClipboardCheck size={24} />} />
-        <StatCard title="متوسط الدرجات" value={`${stats.avgScore}%`} icon={<BarChart3 />} />
+    <div className="space-y-8 pb-12">
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="إجمالي الطلاب" value={stats.totalStudents} icon={<Users />} color="border-primary" />
+        <StatCard title="إجمالي المشاهدات" value={stats.totalViews} icon={<Eye />} color="border-blue-500" />
+        <StatCard title="متوسط المشاهدات" value={(stats.totalViews / (stats.totalStudents || 1)).toFixed(1)} icon={<TrendingUp />} color="border-purple-500" />
+        <StatCard title="نشاط اليوم" value={stats.recentActivity?.length || 0} icon={<Activity />} color="border-yellow-500" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Views by Lesson Chart */}
         <div className="glass-card p-6">
-          <h3 className="text-xl font-bold mb-6">نمو تسجيل الطلاب</h3>
-          <div className="h-[300px]">
+          <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+            <BarChart2 className="text-primary" size={20} />
+            المشاهدات حسب الدرس
+          </h3>
+          <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                <XAxis dataKey="name" stroke="#ffffff60" />
-                <YAxis stroke="#ffffff60" />
-                <Tooltip contentStyle={{ backgroundColor: '#1E1E1E', border: '1px solid #ffffff20' }} />
-                <Line type="monotone" dataKey="value" stroke="#FFC107" strokeWidth={3} dot={{ fill: '#FFC107' }} />
-              </LineChart>
+              <BarChart data={stats.viewsByLesson}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="title" stroke="rgba(255,255,255,0.5)" fontSize={10} tick={false} />
+                <YAxis stroke="rgba(255,255,255,0.5)" fontSize={12} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                  itemStyle={{ color: '#00E676' }}
+                />
+                <Bar dataKey="views" fill="#00E676" radius={[4, 4, 0, 0]} />
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
+        {/* Category Distribution */}
         <div className="glass-card p-6">
-          <h3 className="text-xl font-bold mb-6">إنجاز الدورات</h3>
-          <div className="h-[300px]">
+          <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+            <PieChartIcon className="text-blue-500" size={20} />
+            توزيع المشاهدات (مفتوح vs مغلق)
+          </h3>
+          <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={pieData}
+                  data={stats.categoryStats}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
                   outerRadius={80}
                   paddingAngle={5}
-                  dataKey="value"
+                  dataKey="views"
+                  nameKey="category"
                 >
-                  {pieData.map((entry, index) => (
+                  {stats.categoryStats?.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                />
+                <Legend />
               </PieChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Top Students */}
+        <div className="glass-card p-6 lg:col-span-1">
+          <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+            <UserCheck className="text-yellow-500" size={20} />
+            الطلاب الأكثر تفاعلاً
+          </h3>
+          <div className="space-y-4">
+            {stats.topStudents?.map((student: any, idx: number) => (
+              <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
+                    {idx + 1}
+                  </div>
+                  <span className="text-sm font-medium">{student.full_name}</span>
+                </div>
+                <span className="text-xs text-white/60">{student.total_views} مشاهدة</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="glass-card p-6 lg:col-span-2">
+          <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+            <Activity className="text-purple-500" size={20} />
+            آخر النشاطات
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-right">
+              <thead>
+                <tr className="text-white/40 text-xs border-b border-white/10">
+                  <th className="pb-3 font-medium">الطالب</th>
+                  <th className="pb-3 font-medium">الدرس</th>
+                  <th className="pb-3 font-medium">الوقت</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm">
+                {stats.recentActivity?.map((act: any, idx: number) => (
+                  <tr key={idx} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
+                    <td className="py-3">{act.full_name}</td>
+                    <td className="py-3 text-white/60">{act.title}</td>
+                    <td className="py-3 text-xs text-white/40">
+                      {new Date(act.last_accessed).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -182,8 +231,8 @@ const StatsView: React.FC<{ stats: any }> = ({ stats }) => {
   );
 };
 
-const StatCard: React.FC<{ title: string; value: any; icon: React.ReactNode }> = ({ title, value, icon }) => (
-  <div className="glass-card p-6 flex items-center gap-4">
+const StatCard: React.FC<{ title: string; value: any; icon: React.ReactNode; color?: string }> = ({ title, value, icon, color = "border-primary" }) => (
+  <div className={`glass-card p-6 flex items-center gap-4 border-l-4 ${color}`}>
     <div className="bg-primary/10 p-3 rounded-xl text-primary">
       {icon}
     </div>
@@ -481,10 +530,4 @@ const StudentsView: React.FC<{ students: any[]; onDelete: (id: string) => void }
   </div>
 );
 
-const ClipboardCheck: React.FC<{ size?: number }> = ({ size = 24 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-    <path d="m9 14 2 2 4-4" />
-  </svg>
-);
+export default AdminDashboard;

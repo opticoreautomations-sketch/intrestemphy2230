@@ -215,10 +215,51 @@ app.get("/api/admin/stats", authenticate, (req: any, res) => {
   const totalViews = db.prepare("SELECT SUM(views) as count FROM progress").get() as any;
   const students = db.prepare("SELECT id, full_name, email, created_at FROM profiles WHERE role = 'student'").all();
   
+  // Views per lesson
+  const viewsByLesson = db.prepare(`
+    SELECT l.title, SUM(p.views) as views 
+    FROM lessons l 
+    LEFT JOIN progress p ON l.id = p.lesson_id 
+    GROUP BY l.id 
+    ORDER BY views DESC
+  `).all();
+
+  // Top active students
+  const topStudents = db.prepare(`
+    SELECT pr.full_name, SUM(p.views) as total_views 
+    FROM profiles pr 
+    JOIN progress p ON pr.id = p.student_id 
+    GROUP BY pr.id 
+    ORDER BY total_views DESC 
+    LIMIT 5
+  `).all();
+
+  // Category distribution
+  const categoryStats = db.prepare(`
+    SELECT category, SUM(views) as views 
+    FROM lessons l 
+    LEFT JOIN progress p ON l.id = p.lesson_id 
+    GROUP BY category
+  `).all();
+
+  // Recent activity
+  const recentActivity = db.prepare(`
+    SELECT pr.full_name, l.title, p.last_accessed 
+    FROM progress p 
+    JOIN profiles pr ON p.student_id = pr.id 
+    JOIN lessons l ON p.lesson_id = l.id 
+    ORDER BY p.last_accessed DESC 
+    LIMIT 10
+  `).all();
+  
   res.json({
     totalStudents: totalStudents.count,
     totalViews: totalViews.count || 0,
-    students
+    students,
+    viewsByLesson,
+    topStudents,
+    categoryStats,
+    recentActivity
   });
 });
 
