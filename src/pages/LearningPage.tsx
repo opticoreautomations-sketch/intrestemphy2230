@@ -40,7 +40,7 @@ export const LearningPage: React.FC = () => {
 
   const fetchContent = async () => {
     try {
-      const data = await api.content.get(lessonId!);
+      const data = await api.lessons.getById(lessonId!);
       setContent(data);
     } catch (error: any) {
       console.error('Error fetching content:', error);
@@ -75,8 +75,6 @@ export const LearningPage: React.FC = () => {
     );
   }
 
-  const lessonNumber = lessonId?.replace('lesson', '');
-
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 physics-bg">
       <div className="max-w-5xl mx-auto">
@@ -89,7 +87,7 @@ export const LearningPage: React.FC = () => {
             العودة للرئيسية
           </button>
           <h1 className="text-2xl font-bold">
-            الدرس {lessonNumber}
+            {content?.title || 'عرض الدرس'}
           </h1>
         </div>
 

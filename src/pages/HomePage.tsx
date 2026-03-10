@@ -1,11 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Play, Video, VideoOff, GraduationCap, ChevronLeft } from 'lucide-react';
+import { Play, Video, VideoOff, GraduationCap, ChevronLeft, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api';
+import { toast } from 'react-hot-toast';
 
 export const HomePage: React.FC = () => {
   const { profile } = useAuth();
+  const [selectedCategory, setSelectedCategory] = useState<'open' | 'close' | null>(null);
+  const [lessons, setLessons] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (selectedCategory) {
+      fetchLessons();
+    }
+  }, [selectedCategory]);
+
+  const fetchLessons = async () => {
+    setLoading(true);
+    try {
+      const data = await api.lessons.getByCategory(selectedCategory!);
+      setLessons(data);
+    } catch (error) {
+      toast.error('فشل تحميل الدروس');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 physics-bg">
@@ -23,33 +46,112 @@ export const HomePage: React.FC = () => {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((num) => (
+        {!selectedCategory ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Open Video Path */}
             <motion.div
-              key={num}
               whileHover={{ scale: 1.02 }}
-              className="glass-card overflow-hidden group"
+              onClick={() => setSelectedCategory('open')}
+              className="glass-card overflow-hidden group cursor-pointer border-2 border-transparent hover:border-primary/50 transition-all"
             >
-              <div className="h-32 bg-primary/10 flex items-center justify-center relative">
-                <GraduationCap size={48} className="text-primary group-hover:scale-110 transition-transform" />
+              <div className="h-48 bg-primary/10 flex items-center justify-center relative">
+                <Video size={64} className="text-primary group-hover:scale-110 transition-transform" />
                 <div className="absolute inset-0 bg-gradient-to-t from-dark/80 to-transparent" />
               </div>
-              <div className="p-6">
-                <h2 className="text-xl font-bold mb-2 text-center">الدرس {num}</h2>
-                <p className="text-white/60 text-sm mb-6 text-center">
-                  محتوى تعليمي شامل للدرس {num} يتضمن فيديو، ملفات، واختبارات.
+              <div className="p-8">
+                <h2 className="text-2xl font-bold mb-4">فيديو تفاعلي مفتوح</h2>
+                <p className="text-white/60 mb-6">
+                  استكشف المفاهيم الفيزيائية من خلال تجربة فيديو تفاعلية مفتوحة تتيح لك حرية التنقل.
                 </p>
-                <Link 
-                  to={`/learning/lesson${num}`} 
-                  className="btn-primary w-full flex items-center justify-center gap-2 text-sm py-2"
-                >
-                  ابدأ الدرس
-                  <ChevronLeft size={16} />
-                </Link>
+                <div className="btn-primary w-full flex items-center justify-center gap-2">
+                  عرض الدروس
+                  <ChevronLeft size={20} />
+                </div>
               </div>
             </motion.div>
-          ))}
-        </div>
+
+            {/* Close Video Path */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              onClick={() => setSelectedCategory('close')}
+              className="glass-card overflow-hidden group cursor-pointer border-2 border-transparent hover:border-white/20 transition-all"
+            >
+              <div className="h-48 bg-white/5 flex items-center justify-center relative">
+                <VideoOff size={64} className="text-white/40 group-hover:scale-110 transition-transform" />
+                <div className="absolute inset-0 bg-gradient-to-t from-dark/80 to-transparent" />
+              </div>
+              <div className="p-8">
+                <h2 className="text-2xl font-bold mb-4">فيديو تفاعلي مغلق</h2>
+                <p className="text-white/60 mb-6">
+                  مسار تعليمي محكم يضمن تسلسل الأفكار وبناء المعرفة خطوة بخطوة.
+                </p>
+                <div className="btn-primary w-full flex items-center justify-center gap-2">
+                  عرض الدروس
+                  <ChevronLeft size={20} />
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        ) : (
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="space-y-8"
+          >
+            <div className="flex items-center justify-between">
+              <button 
+                onClick={() => setSelectedCategory(null)}
+                className="flex items-center gap-2 text-white/60 hover:text-primary transition-colors"
+              >
+                <ArrowRight size={20} />
+                العودة للمسارات
+              </button>
+              <h2 className="text-2xl font-bold">
+                دروس {selectedCategory === 'open' ? 'الفيديو المفتوح' : 'الفيديو المغلق'}
+              </h2>
+            </div>
+
+            {loading ? (
+              <div className="flex justify-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {lessons.length === 0 ? (
+                  <div className="col-span-full text-center py-20 glass-card">
+                    <p className="text-white/40">لا توجد دروس مضافة في هذا القسم حالياً</p>
+                  </div>
+                ) : (
+                  lessons.map((lesson) => (
+                    <motion.div
+                      key={lesson.id}
+                      whileHover={{ scale: 1.02 }}
+                      className="glass-card overflow-hidden group"
+                    >
+                      <div className="h-32 bg-primary/10 flex items-center justify-center relative">
+                        <GraduationCap size={48} className="text-primary group-hover:scale-110 transition-transform" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-dark/80 to-transparent" />
+                      </div>
+                      <div className="p-6">
+                        <h2 className="text-xl font-bold mb-2 text-center">{lesson.title}</h2>
+                        <p className="text-white/60 text-sm mb-6 text-center line-clamp-2">
+                          محتوى تعليمي شامل يتضمن فيديو، ملفات، واختبارات.
+                        </p>
+                        <Link 
+                          to={`/learning/${lesson.id}`} 
+                          className="btn-primary w-full flex items-center justify-center gap-2 text-sm py-2"
+                        >
+                          ابدأ الدرس
+                          <ChevronLeft size={16} />
+                        </Link>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            )}
+          </motion.div>
+        )}
 
         <section className="mt-20">
           <div className="glass-card p-8 flex flex-col md:flex-row items-center justify-between gap-8">

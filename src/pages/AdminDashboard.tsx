@@ -195,8 +195,11 @@ const StatCard: React.FC<{ title: string; value: any; icon: React.ReactNode }> =
 );
 
 const ContentView: React.FC = () => {
-  const [selectedLesson, setSelectedLesson] = useState<'lesson1' | 'lesson2' | 'lesson3' | 'lesson4'>('lesson1');
+  const [selectedCategory, setSelectedCategory] = useState<'open' | 'close'>('open');
+  const [lessons, setLessons] = useState<any[]>([]);
+  const [editingLesson, setEditingLesson] = useState<any>(null);
   const [formData, setFormData] = useState({
+    title: '',
     video_url: '',
     pdf_url: '',
     booklet_url: '',
@@ -205,25 +208,59 @@ const ContentView: React.FC = () => {
   const [uploading, setUploading] = useState<string | null>(null);
 
   useEffect(() => {
-    api.content.get(selectedLesson).then(data => {
-      if (data) {
-        setFormData({
-          video_url: data.video_url || '',
-          pdf_url: data.pdf_url || '',
-          booklet_url: data.booklet_url || '',
-          test_url: data.test_url || ''
-        });
-      }
-    });
-  }, [selectedLesson]);
+    fetchLessons();
+  }, [selectedCategory]);
+
+  const fetchLessons = async () => {
+    try {
+      const data = await api.lessons.getByCategory(selectedCategory);
+      setLessons(data);
+    } catch (error) {
+      toast.error('فشل تحميل الدروس');
+    }
+  };
 
   const handleSave = async () => {
-    try {
-      await api.content.update({ type: selectedLesson, ...formData });
-      toast.success('تم حفظ التغييرات بنجاح');
-    } catch (error) {
-      toast.error('فشل حفظ التغييرات');
+    if (!formData.title) {
+      toast.error('يرجى إدخال عنوان الدرس');
+      return;
     }
+    try {
+      await api.lessons.save({ 
+        id: editingLesson?.id,
+        category: selectedCategory, 
+        ...formData 
+      });
+      toast.success(editingLesson ? 'تم تحديث الدرس' : 'تم إضافة الدرس بنجاح');
+      setFormData({ title: '', video_url: '', pdf_url: '', booklet_url: '', test_url: '' });
+      setEditingLesson(null);
+      fetchLessons();
+    } catch (error) {
+      toast.error('فشل حفظ الدرس');
+    }
+  };
+
+  const handleDelete = async (id: number | string) => {
+    if (!confirm('هل أنت متأكد من حذف هذا الدرس؟')) return;
+    try {
+      await api.lessons.delete(id.toString());
+      toast.success('تم حذف الدرس');
+      fetchLessons();
+    } catch (error) {
+      toast.error('فشل حذف الدرس');
+    }
+  };
+
+  const handleEdit = (lesson: any) => {
+    setEditingLesson(lesson);
+    setFormData({
+      title: lesson.title,
+      video_url: lesson.video_url || '',
+      pdf_url: lesson.pdf_url || '',
+      booklet_url: lesson.booklet_url || '',
+      test_url: lesson.test_url || ''
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleFileUpload = async (field: keyof typeof formData, file: File) => {
@@ -240,54 +277,121 @@ const ContentView: React.FC = () => {
   };
 
   return (
-    <div className="glass-card p-8 max-w-3xl mx-auto">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-8">
-        {[1, 2, 3, 4].map((num) => (
+    <div className="space-y-8">
+      <div className="glass-card p-8 max-w-3xl mx-auto">
+        <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+          <Plus className="text-primary" />
+          {editingLesson ? 'تعديل الدرس' : 'إضافة درس جديد'}
+        </h2>
+
+        <div className="flex gap-4 mb-8">
           <button 
-            key={num}
-            onClick={() => setSelectedLesson(`lesson${num}` as any)}
-            className={`py-3 rounded-xl font-bold transition-all ${selectedLesson === `lesson${num}` ? 'bg-primary text-dark' : 'bg-white/5 text-white/60'}`}
+            onClick={() => { setSelectedCategory('open'); setEditingLesson(null); }}
+            className={`flex-1 py-3 rounded-xl font-bold transition-all ${selectedCategory === 'open' ? 'bg-primary text-dark' : 'bg-white/5 text-white/60'}`}
           >
-            الدرس {num}
+            الفيديو المفتوح
           </button>
-        ))}
+          <button 
+            onClick={() => { setSelectedCategory('close'); setEditingLesson(null); }}
+            className={`flex-1 py-3 rounded-xl font-bold transition-all ${selectedCategory === 'close' ? 'bg-primary text-dark' : 'bg-white/5 text-white/60'}`}
+          >
+            الفيديو المغلق
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-sm text-white/70">عنوان الدرس</label>
+            <input 
+              type="text" 
+              className="input-field w-full" 
+              placeholder="مثال: مقدمة في الميكانيكا"
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+            />
+          </div>
+
+          <InputGroup 
+            label="رابط الفيديو (Video)" 
+            icon={<Video size={18} />} 
+            value={formData.video_url} 
+            onChange={(v) => setFormData({...formData, video_url: v})}
+            onUpload={(file) => handleFileUpload('video_url', file)}
+            isUploading={uploading === 'video_url'}
+          />
+          <InputGroup 
+            label="رابط ملف الـ PDF" 
+            icon={<FileUp size={18} />} 
+            value={formData.pdf_url} 
+            onChange={(v) => setFormData({...formData, pdf_url: v})}
+            onUpload={(file) => handleFileUpload('pdf_url', file)}
+            isUploading={uploading === 'pdf_url'}
+          />
+          <InputGroup 
+            label="رابط الكتيب (Booklet)" 
+            icon={<FileUp size={18} />} 
+            value={formData.booklet_url} 
+            onChange={(v) => setFormData({...formData, booklet_url: v})}
+            onUpload={(file) => handleFileUpload('booklet_url', file)}
+            isUploading={uploading === 'booklet_url'}
+          />
+          <InputGroup 
+            label="رابط الاختبار (Test)" 
+            icon={<LinkIcon size={18} />} 
+            value={formData.test_url} 
+            onChange={(v) => setFormData({...formData, test_url: v})} 
+            onUpload={(file) => handleFileUpload('test_url', file)}
+            isUploading={uploading === 'test_url'}
+          />
+          
+          <div className="flex gap-4">
+            <button onClick={handleSave} className="btn-primary flex-1">
+              {editingLesson ? 'تحديث الدرس' : 'إضافة الدرس'}
+            </button>
+            {editingLesson && (
+              <button 
+                onClick={() => { setEditingLesson(null); setFormData({ title: '', video_url: '', pdf_url: '', booklet_url: '', test_url: '' }); }}
+                className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl transition-all"
+              >
+                إلغاء
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-6">
-        <InputGroup 
-          label="رابط الفيديو (Video)" 
-          icon={<Video size={18} />} 
-          value={formData.video_url} 
-          onChange={(v) => setFormData({...formData, video_url: v})}
-          onUpload={(file) => handleFileUpload('video_url', file)}
-          isUploading={uploading === 'video_url'}
-        />
-        <InputGroup 
-          label="رابط ملف الـ PDF" 
-          icon={<FileUp size={18} />} 
-          value={formData.pdf_url} 
-          onChange={(v) => setFormData({...formData, pdf_url: v})}
-          onUpload={(file) => handleFileUpload('pdf_url', file)}
-          isUploading={uploading === 'pdf_url'}
-        />
-        <InputGroup 
-          label="رابط الكتيب (Booklet)" 
-          icon={<FileUp size={18} />} 
-          value={formData.booklet_url} 
-          onChange={(v) => setFormData({...formData, booklet_url: v})}
-          onUpload={(file) => handleFileUpload('booklet_url', file)}
-          isUploading={uploading === 'booklet_url'}
-        />
-        <InputGroup 
-          label="رابط الاختبار (Test)" 
-          icon={<LinkIcon size={18} />} 
-          value={formData.test_url} 
-          onChange={(v) => setFormData({...formData, test_url: v})} 
-          onUpload={(file) => handleFileUpload('test_url', file)}
-          isUploading={uploading === 'test_url'}
-        />
-        
-        <button onClick={handleSave} className="btn-primary w-full mt-8">حفظ التغييرات</button>
+      <div className="glass-card p-6 max-w-5xl mx-auto">
+        <h3 className="text-xl font-bold mb-6">قائمة الدروس الحالية ({selectedCategory === 'open' ? 'المفتوحة' : 'المغلقة'})</h3>
+        <div className="space-y-4">
+          {lessons.length === 0 ? (
+            <p className="text-center text-white/40 py-8">لا توجد دروس مضافة بعد في هذا القسم</p>
+          ) : (
+            lessons.map(lesson => (
+              <div key={lesson.id} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 hover:border-primary/50 transition-all group">
+                <div>
+                  <h4 className="font-bold text-lg">{lesson.title}</h4>
+                  <p className="text-xs text-white/40">تاريخ الإضافة: {new Date(lesson.created_at).toLocaleDateString('ar-EG')}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => handleEdit(lesson)}
+                    className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-all"
+                    title="تعديل"
+                  >
+                    <Settings size={18} />
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(lesson.id)}
+                    className="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-all"
+                    title="حذف"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

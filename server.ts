@@ -27,30 +27,31 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
-  CREATE TABLE IF NOT EXISTS content (
-    type TEXT PRIMARY KEY,
+  CREATE TABLE IF NOT EXISTS lessons (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category TEXT, -- 'open' or 'close'
+    title TEXT,
     video_url TEXT,
     pdf_url TEXT,
     booklet_url TEXT,
     test_url TEXT,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
   CREATE TABLE IF NOT EXISTS progress (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id TEXT,
-    content_type TEXT,
+    lesson_id INTEGER,
     views INTEGER DEFAULT 0,
     last_accessed DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(student_id, content_type),
-    FOREIGN KEY(student_id) REFERENCES profiles(id)
+    UNIQUE(student_id, lesson_id),
+    FOREIGN KEY(student_id) REFERENCES profiles(id),
+    FOREIGN KEY(lesson_id) REFERENCES lessons(id)
   );
 
-  -- Initial Content (4 Lessons)
-  INSERT OR IGNORE INTO content (type) VALUES ('lesson1');
-  INSERT OR IGNORE INTO content (type) VALUES ('lesson2');
-  INSERT OR IGNORE INTO content (type) VALUES ('lesson3');
-  INSERT OR IGNORE INTO content (type) VALUES ('lesson4');
+  -- Initial Lessons
+  INSERT OR IGNORE INTO lessons (id, category, title) VALUES (1, 'open', 'الدرس الأول (تجريبي)');
+  INSERT OR IGNORE INTO lessons (id, category, title) VALUES (2, 'close', 'الدرس الثاني (تجريبي)');
 `);
 
 // Default Admin (Teacher)
@@ -155,34 +156,54 @@ app.get("/api/auth/me", authenticate, (req: any, res) => {
   res.json(user);
 });
 
-// Content: Get
-app.get("/api/content/:type", authenticate, (req, res) => {
-  const content = db.prepare("SELECT * FROM content WHERE type = ?").get(req.params.type);
-  res.json(content);
+// Lessons: Get by category
+app.get("/api/lessons/:category", authenticate, (req, res) => {
+  const lessons = db.prepare("SELECT * FROM lessons WHERE category = ? ORDER BY created_at DESC").all(req.params.category);
+  res.json(lessons);
 });
 
-// Content: Update (Teacher only)
-app.post("/api/content", authenticate, (req: any, res) => {
+// Lessons: Get by ID
+app.get("/api/lesson/:id", authenticate, (req, res) => {
+  const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(req.params.id);
+  res.json(lesson);
+});
+
+// Lessons: Create or Update (Teacher only)
+app.post("/api/lessons", authenticate, (req: any, res) => {
   if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
-  const { type, video_url, pdf_url, booklet_url, test_url } = req.body;
+  const { id, category, title, video_url, pdf_url, booklet_url, test_url } = req.body;
   
-  db.prepare(`
-    UPDATE content 
-    SET video_url = ?, pdf_url = ?, booklet_url = ?, test_url = ?, updated_at = CURRENT_TIMESTAMP
-    WHERE type = ?
-  `).run(video_url, pdf_url, booklet_url, test_url, type);
-  
-  res.json({ message: "Content updated" });
+  if (id) {
+    db.prepare(`
+      UPDATE lessons 
+      SET category = ?, title = ?, video_url = ?, pdf_url = ?, booklet_url = ?, test_url = ?
+      WHERE id = ?
+    `).run(category, title, video_url, pdf_url, booklet_url, test_url, id);
+    res.json({ message: "Lesson updated" });
+  } else {
+    db.prepare(`
+      INSERT INTO lessons (category, title, video_url, pdf_url, booklet_url, test_url)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(category, title, video_url, pdf_url, booklet_url, test_url);
+    res.json({ message: "Lesson created" });
+  }
+});
+
+// Lessons: Delete (Teacher only)
+app.delete("/api/lessons/:id", authenticate, (req: any, res) => {
+  if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
+  db.prepare("DELETE FROM lessons WHERE id = ?").run(req.params.id);
+  res.json({ message: "Lesson deleted" });
 });
 
 // Progress: Track View
 app.post("/api/progress/view", authenticate, (req: any, res) => {
-  const { content_type } = req.body;
+  const { lesson_id } = req.body;
   db.prepare(`
-    INSERT INTO progress (student_id, content_type, views) 
+    INSERT INTO progress (student_id, lesson_id, views) 
     VALUES (?, ?, 1)
-    ON CONFLICT(student_id, content_type) DO UPDATE SET views = views + 1, last_accessed = CURRENT_TIMESTAMP
-  `).run(req.user.id, content_type);
+    ON CONFLICT(student_id, lesson_id) DO UPDATE SET views = views + 1, last_accessed = CURRENT_TIMESTAMP
+  `).run(req.user.id, lesson_id);
   res.json({ message: "View tracked" });
 });
 
@@ -234,6 +255,12 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
+  });
+
+  // Global Error Handler
+  app.use((err: any, req: any, res: any, next: any) => {
+    console.error(err);
+    res.status(500).json({ error: err.message || "Internal Server Error" });
   });
 }
 

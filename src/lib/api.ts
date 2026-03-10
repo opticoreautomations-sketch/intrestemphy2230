@@ -20,8 +20,15 @@ export const api = {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Something went wrong");
+      let errorMessage = "Something went wrong";
+      try {
+        const error = await response.json();
+        errorMessage = error.error || errorMessage;
+      } catch (e) {
+        // Not JSON, use status text or generic message
+        errorMessage = response.statusText || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -62,23 +69,31 @@ export const api = {
     },
   },
 
-  content: {
-    async get(type: string) {
-      return api.fetch(`/content/${type}`);
+  lessons: {
+    async getByCategory(category: string) {
+      return api.fetch(`/lessons/${category}`);
     },
-    async update(data: any) {
-      return api.fetch("/content", {
+    async getById(id: string) {
+      return api.fetch(`/lesson/${id}`);
+    },
+    async save(data: any) {
+      return api.fetch("/lessons", {
         method: "POST",
         body: JSON.stringify(data),
+      });
+    },
+    async delete(id: string) {
+      return api.fetch(`/lessons/${id}`, {
+        method: "DELETE",
       });
     },
   },
 
   progress: {
-    async trackView(contentType: string) {
+    async trackView(lessonId: string | number) {
       return api.fetch("/progress/view", {
         method: "POST",
-        body: JSON.stringify({ content_type: contentType }),
+        body: JSON.stringify({ lesson_id: lessonId }),
       });
     },
   },
