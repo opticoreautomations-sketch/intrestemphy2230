@@ -13,8 +13,20 @@ const PORT = Number(process.env.PORT) || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || "physics-platform-secret";
 
 // Initialize Database
-const db = new Database("physics.db");
+const isVercel = process.env.VERCEL === "1";
+const dbPath = isVercel ? "/tmp/physics.db" : "physics.db";
+
+// Copy existing DB to /tmp if on Vercel (for initial data)
+if (isVercel && fs.existsSync("physics.db") && !fs.existsSync(dbPath)) {
+  fs.copyFileSync("physics.db", dbPath);
+}
+
+const db = new Database(dbPath);
 db.pragma("journal_mode = WAL");
+
+if (isVercel) {
+  console.warn("WARNING: Running on Vercel with SQLite. Data will NOT persist across function invocations. Please switch to a hosted database like Supabase or Neon for production.");
+}
 
 // Setup Tables
 db.exec(`
@@ -62,22 +74,23 @@ db.prepare(`
   ON CONFLICT(email) DO UPDATE SET password = excluded.password, role = 'teacher'
 `).run("admin-id", "Admin Teacher", "admin@physics.com", adminPassword, "teacher");
 
-const app = express();
+export const app = express();
 app.use(express.json());
 
 // File Upload Setup
+const uploadDir = isVercel ? "/tmp/uploads" : path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, "uploads");
-    if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath);
-    cb(null, uploadPath);
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + "-" + file.originalname);
   },
 });
 const upload = multer({ storage });
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(uploadDir));
 
 // Middleware: Auth
 const authenticate = (req: any, res: any, next: any) => {
@@ -280,7 +293,7 @@ app.post("/api/admin/upload", authenticate, upload.single("file"), (req: any, re
 });
 
 // --- Vite Integration ---
-async function startServer() {
+export async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -305,4 +318,6 @@ async function startServer() {
   });
 }
 
-startServer();
+if (process.env.NODE_ENV !== "production" || process.env.VERCEL !== "1") {
+  startServer();
+}

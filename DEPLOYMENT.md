@@ -29,5 +29,10 @@ To make a user a teacher:
 
 1. Push your code to GitHub.
 2. Connect your repository to Vercel.
-3. Add the environment variables.
+3. Add the environment variables (e.g., `JWT_SECRET`).
 4. Deploy!
+
+**Note on Vercel Persistence:**
+- This app uses SQLite for simplicity. On Vercel, the database is stored in `/tmp`, which is **ephemeral**. Data will be lost when the serverless function restarts.
+- Uploaded files are also stored in `/tmp` and will be lost.
+- For production, it is highly recommended to use **Supabase** (as described above) for both the database and file storage.
