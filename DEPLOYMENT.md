@@ -25,14 +25,16 @@ To make a user a teacher:
 2. Go to Supabase Dashboard > Table Editor > `profiles`.
 3. Change the `role` of your user from `student` to `teacher`.
 
-## 4. Vercel Deployment
+## 5. Render Deployment
 
 1. Push your code to GitHub.
-2. Connect your repository to Vercel.
-3. Add the environment variables (e.g., `JWT_SECRET`).
-4. Deploy!
+2. Go to [Render](https://render.com) and click **"New"** > **"Blueprint"**.
+3. Connect your repository.
+4. Render will automatically detect the `render.yaml` file and set up:
+    - A **Web Service** for the app.
+    - A **Persistent Disk** (1GB) to store your SQLite database and uploads.
+5. Add any missing environment variables (like `JWT_SECRET` if you didn't generate it).
+6. Deploy!
 
-**Note on Vercel Persistence:**
-- This app uses SQLite for simplicity. On Vercel, the database is stored in `/tmp`, which is **ephemeral**. Data will be lost when the serverless function restarts.
-- Uploaded files are also stored in `/tmp` and will be lost.
-- For production, it is highly recommended to use **Supabase** (as described above) for both the database and file storage.
+**Note on Render Persistence:**
+- Unlike Vercel, Render supports **Persistent Disks**. Your data and uploads will survive restarts as long as the disk is mounted at `/var/data`.

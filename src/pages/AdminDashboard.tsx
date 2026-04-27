@@ -37,7 +37,7 @@ import {
 } from 'recharts';
 
 export const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'stats' | 'content' | 'students'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'content' | 'students' | 'materials'>('stats');
   const [stats, setStats] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,15 +79,17 @@ export const AdminDashboard: React.FC = () => {
             لوحة تحكم المعلم
           </h1>
           
-          <div className="flex bg-white/5 p-1 rounded-xl">
+          <div className="flex bg-white/5 p-1 rounded-xl flex-wrap justify-center">
             <TabButton active={activeTab === 'stats'} onClick={() => setActiveTab('stats')} label="الإحصائيات" icon={<BarChart3 size={18} />} />
-            <TabButton active={activeTab === 'content'} onClick={() => setActiveTab('content')} label="إدارة المحتوى" icon={<FileUp size={18} />} />
+            <TabButton active={activeTab === 'content'} onClick={() => setActiveTab('content')} label="الدروس" icon={<Video size={18} />} />
+            <TabButton active={activeTab === 'materials'} onClick={() => setActiveTab('materials')} label="المصادر الخارجية" icon={<FileUp size={18} />} />
             <TabButton active={activeTab === 'students'} onClick={() => setActiveTab('students')} label="الطلاب" icon={<Users size={18} />} />
           </div>
         </div>
 
         {activeTab === 'stats' && <StatsView stats={stats} />}
         {activeTab === 'content' && <ContentView />}
+        {activeTab === 'materials' && <MaterialsView />}
         {activeTab === 'students' && <StudentsView students={students} onDelete={deleteStudent} />}
       </div>
     </div>
@@ -493,6 +495,164 @@ const InputGroup: React.FC<{
             }}
           />
         )}
+      </div>
+    </div>
+  );
+};
+
+const MaterialsView: React.FC = () => {
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [formData, setFormData] = useState({ title: '', url: '', type: 'pdf' as 'pdf' | 'link' });
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    fetchMaterials();
+  }, []);
+
+  const fetchMaterials = async () => {
+    try {
+      const data = await api.materials.getAll();
+      setMaterials(data);
+    } catch (error) {
+      toast.error('فشل تحميل المصادر');
+    }
+  };
+
+  const handleSave = async () => {
+    if (!formData.title || !formData.url) {
+      toast.error('يرجى ملء جميع الحقول');
+      return;
+    }
+    try {
+      await api.materials.create(formData);
+      toast.success('تم إضافة المصدر بنجاح');
+      setFormData({ title: '', url: '', type: 'pdf' });
+      fetchMaterials();
+    } catch (error) {
+      toast.error('فشل إضافة المصدر');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('هل أنت متأكد من حذف هذا المصدر؟')) return;
+    try {
+      await api.materials.delete(id);
+      toast.success('تم حذف المصدر');
+      fetchMaterials();
+    } catch (error) {
+      toast.error('فشل حذف المصدر');
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const { url } = await api.admin.upload(file);
+      setFormData(prev => ({ ...prev, url, type: 'pdf' }));
+      toast.success('تم رفع الملف بنجاح');
+    } catch (error) {
+      toast.error('فشل رفع الملف');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="glass-card p-8 max-w-3xl mx-auto">
+        <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+          <Plus className="text-primary" />
+          إضافة مصدر خارجي (PDF أو رابط)
+        </h2>
+
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-sm text-white/70">عنوان المصدر</label>
+            <input 
+              type="text" 
+              className="input-field w-full" 
+              placeholder="مثال: ملخص قوانين الميكانيكا"
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+            />
+          </div>
+
+          <div className="flex gap-4">
+            <button 
+              onClick={() => setFormData({...formData, type: 'pdf'})}
+              className={`flex-1 py-2 rounded-lg text-sm transition-all ${formData.type === 'pdf' ? 'bg-primary text-dark font-bold' : 'bg-white/5 text-white/60'}`}
+            >
+              ملف PDF
+            </button>
+            <button 
+              onClick={() => setFormData({...formData, type: 'link'})}
+              className={`flex-1 py-2 rounded-lg text-sm transition-all ${formData.type === 'link' ? 'bg-primary text-dark font-bold' : 'bg-white/5 text-white/60'}`}
+            >
+              رابط خارجي
+            </button>
+          </div>
+
+          {formData.type === 'pdf' ? (
+            <InputGroup 
+              label="ملف الـ PDF" 
+              icon={<FileUp size={18} />} 
+              value={formData.url} 
+              onChange={(v) => setFormData({...formData, url: v})}
+              onUpload={handleFileUpload}
+              isUploading={uploading}
+            />
+          ) : (
+            <InputGroup 
+              label="الرابط" 
+              icon={<LinkIcon size={18} />} 
+              value={formData.url} 
+              onChange={(v) => setFormData({...formData, url: v})}
+            />
+          )}
+
+          <button onClick={handleSave} className="btn-primary w-full py-3">
+            حفظ المصدر
+          </button>
+        </div>
+      </div>
+
+      <div className="glass-card p-6 max-w-5xl mx-auto">
+        <h3 className="text-xl font-bold mb-6">المصادر المضافة</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {materials.length === 0 ? (
+            <p className="text-center text-white/40 py-8 col-span-full">لا توجد مصادر مضافة بعد</p>
+          ) : (
+            materials.map(item => (
+              <div key={item.id} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 hover:border-primary/50 transition-all group">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${item.type === 'pdf' ? 'bg-red-500/10 text-red-400' : 'bg-blue-500/10 text-blue-400'}`}>
+                    {item.type === 'pdf' ? <FileUp size={20} /> : <LinkIcon size={20} />}
+                  </div>
+                  <div>
+                    <h4 className="font-bold">{item.title}</h4>
+                    <span className="text-[10px] text-white/40">{item.type === 'pdf' ? 'ملف PDF' : 'رابط'}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <a 
+                    href={item.url.startsWith('/') ? item.url : item.url} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="p-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all"
+                  >
+                    <Eye size={18} />
+                  </a>
+                  <button 
+                    onClick={() => handleDelete(item.id)}
+                    className="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-all"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

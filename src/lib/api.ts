@@ -98,6 +98,23 @@ export const api = {
     },
   },
 
+  materials: {
+    async getAll() {
+      return api.fetch("/materials");
+    },
+    async create(data: any) {
+      return api.fetch("/materials", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    async delete(id: string | number) {
+      return api.fetch(`/materials/${id}`, {
+        method: "DELETE",
+      });
+    },
+  },
+
   admin: {
     async getStats() {
       return api.fetch("/admin/stats");

@@ -14,7 +14,17 @@ const JWT_SECRET = process.env.JWT_SECRET || "physics-platform-secret";
 
 // Initialize Database
 const isVercel = process.env.VERCEL === "1";
-const dbPath = isVercel ? "/tmp/physics.db" : "physics.db";
+const isRender = process.env.RENDER === "true";
+
+// On Render, we recommend using a Persistent Disk mounted at /var/data
+const defaultDbPath = isRender ? "/var/data/physics.db" : "physics.db";
+const dbPath = process.env.DB_PATH || (isVercel ? "/tmp/physics.db" : defaultDbPath);
+
+// Ensure directory exists for Render/Local
+const dbDir = path.dirname(dbPath);
+if (dbDir !== "." && !fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
 
 // Copy existing DB to /tmp if on Vercel (for initial data)
 if (isVercel && fs.existsSync("physics.db") && !fs.existsSync(dbPath)) {
@@ -61,6 +71,14 @@ db.exec(`
     FOREIGN KEY(lesson_id) REFERENCES lessons(id)
   );
 
+  CREATE TABLE IF NOT EXISTS materials (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT,
+    url TEXT,
+    type TEXT, -- 'pdf' or 'link'
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   -- Initial Lessons
   INSERT OR IGNORE INTO lessons (id, category, title) VALUES (1, 'open', 'الدرس الأول (تجريبي)');
   INSERT OR IGNORE INTO lessons (id, category, title) VALUES (2, 'close', 'الدرس الثاني (تجريبي)');
@@ -78,7 +96,8 @@ export const app = express();
 app.use(express.json());
 
 // File Upload Setup
-const uploadDir = isVercel ? "/tmp/uploads" : path.join(__dirname, "uploads");
+const defaultUploadDir = isRender ? "/var/data/uploads" : path.join(__dirname, "uploads");
+const uploadDir = process.env.UPLOADS_PATH || (isVercel ? "/tmp/uploads" : defaultUploadDir);
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
@@ -207,6 +226,30 @@ app.delete("/api/lessons/:id", authenticate, (req: any, res) => {
   if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
   db.prepare("DELETE FROM lessons WHERE id = ?").run(req.params.id);
   res.json({ message: "Lesson deleted" });
+});
+
+// Materials: Get all
+app.get("/api/materials", authenticate, (req, res) => {
+  const materials = db.prepare("SELECT * FROM materials ORDER BY created_at DESC").all();
+  res.json(materials);
+});
+
+// Materials: Create (Teacher only)
+app.post("/api/materials", authenticate, (req: any, res) => {
+  if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
+  const { title, url, type } = req.body;
+  if (!title || !url || !type) return res.status(400).json({ error: "Missing fields" });
+  
+  db.prepare("INSERT INTO materials (title, url, type) VALUES (?, ?, ?)")
+    .run(title, url, type);
+  res.json({ message: "Material added" });
+});
+
+// Materials: Delete (Teacher only)
+app.delete("/api/materials/:id", authenticate, (req: any, res) => {
+  if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
+  db.prepare("DELETE FROM materials WHERE id = ?").run(req.params.id);
+  res.json({ message: "Material deleted" });
 });
 
 // Progress: Track View

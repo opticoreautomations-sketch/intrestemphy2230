@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Play, Video, VideoOff, GraduationCap, ChevronLeft, ArrowRight } from 'lucide-react';
+import { Play, Video, VideoOff, GraduationCap, ChevronLeft, ArrowRight, FileText, Link as LinkIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { toast } from 'react-hot-toast';
@@ -10,12 +10,14 @@ export const HomePage: React.FC = () => {
   const { profile } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<'open' | 'close' | null>(null);
   const [lessons, setLessons] = useState<any[]>([]);
+  const [materials, setMaterials] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (selectedCategory) {
       fetchLessons();
     }
+    fetchMaterials();
   }, [selectedCategory]);
 
   const fetchLessons = async () => {
@@ -27,6 +29,15 @@ export const HomePage: React.FC = () => {
       toast.error('فشل تحميل الدروس');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMaterials = async () => {
+    try {
+      const data = await api.materials.getAll();
+      setMaterials(data);
+    } catch (error) {
+      console.error('Failed to fetch materials');
     }
   };
 
@@ -151,6 +162,37 @@ export const HomePage: React.FC = () => {
               </div>
             )}
           </motion.div>
+        )}
+        
+        {/* General Materials Section */}
+        {!selectedCategory && materials.length > 0 && (
+          <section className="mt-20">
+            <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
+              <FileText className="text-primary" />
+              المصادر والمذكرات العامة
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {materials.map((item) => (
+                <motion.a
+                  key={item.id}
+                  whileHover={{ y: -5 }}
+                  href={item.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="glass-card p-5 flex items-center gap-4 border border-white/5 hover:border-primary/30 transition-all group"
+                >
+                  <div className={`p-3 rounded-xl ${item.type === 'pdf' ? 'bg-red-500/10 text-red-400' : 'bg-blue-500/10 text-blue-400'}`}>
+                    {item.type === 'pdf' ? <FileText size={20} /> : <LinkIcon size={20} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-sm truncate group-hover:text-primary transition-colors">{item.title}</h4>
+                    <p className="text-[10px] text-white/40 mt-1">{item.type === 'pdf' ? 'ملف PDF' : 'رابط خارجي'}</p>
+                  </div>
+                  <ChevronLeft size={16} className="text-white/20 group-hover:text-primary group-hover:translate-x-[-4px] transition-all" />
+                </motion.a>
+              ))}
+            </div>
+          </section>
         )}
 
         <section className="mt-20">
