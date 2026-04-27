@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { Play, Video, VideoOff, GraduationCap, ChevronLeft, ArrowRight, FileText, Link as LinkIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Play, Video, VideoOff, GraduationCap, ChevronLeft, ArrowRight, FileText, Link as LinkIcon, X, Clock, Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { toast } from 'react-hot-toast';
 
 export const HomePage: React.FC = () => {
+  const navigate = useNavigate();
   const { profile } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<'open' | 'close' | null>(null);
   const [lessons, setLessons] = useState<any[]>([]);
   const [materials, setMaterials] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedLessonForModal, setSelectedLessonForModal] = useState<any>(null);
+  const [lessonProgress, setLessonProgress] = useState<any>(null);
+  const [loadingProgress, setLoadingProgress] = useState(false);
 
   useEffect(() => {
     if (selectedCategory) {
@@ -38,6 +42,19 @@ export const HomePage: React.FC = () => {
       setMaterials(data);
     } catch (error) {
       console.error('Failed to fetch materials');
+    }
+  };
+
+  const handleLessonClick = async (lesson: any) => {
+    setSelectedLessonForModal(lesson);
+    setLoadingProgress(true);
+    try {
+      const progress = await api.progress.getByLesson(lesson.id);
+      setLessonProgress(progress);
+    } catch (error) {
+      console.error('Failed to fetch progress');
+    } finally {
+      setLoadingProgress(false);
     }
   };
 
@@ -137,7 +154,8 @@ export const HomePage: React.FC = () => {
                     <motion.div
                       key={lesson.id}
                       whileHover={{ scale: 1.02 }}
-                      className="glass-card overflow-hidden group"
+                      className="glass-card overflow-hidden group cursor-pointer"
+                      onClick={() => handleLessonClick(lesson)}
                     >
                       <div className="h-32 bg-primary/10 flex items-center justify-center relative">
                         <GraduationCap size={48} className="text-primary group-hover:scale-110 transition-transform" />
@@ -148,13 +166,10 @@ export const HomePage: React.FC = () => {
                         <p className="text-white/60 text-sm mb-6 text-center line-clamp-2">
                           محتوى تعليمي شامل يتضمن فيديو، ملفات، واختبارات.
                         </p>
-                        <Link 
-                          to={`/learning/${lesson.id}`} 
-                          className="btn-primary w-full flex items-center justify-center gap-2 text-sm py-2"
-                        >
-                          ابدأ الدرس
+                        <div className="btn-primary w-full flex items-center justify-center gap-2 text-sm py-2">
+                          تفاصيل الدرس
                           <ChevronLeft size={16} />
-                        </Link>
+                        </div>
                       </div>
                     </motion.div>
                   ))
@@ -163,6 +178,83 @@ export const HomePage: React.FC = () => {
             )}
           </motion.div>
         )}
+
+        {/* Lesson Details Modal */}
+        <AnimatePresence>
+          {selectedLessonForModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-dark/80 backdrop-blur-sm"
+                onClick={() => setSelectedLessonForModal(null)}
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="glass-card max-w-lg w-full relative z-10 overflow-hidden"
+              >
+                <button 
+                  onClick={() => setSelectedLessonForModal(null)}
+                  className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-all z-20"
+                >
+                  <X size={20} />
+                </button>
+
+                <div className="h-40 bg-primary/10 flex items-center justify-center relative">
+                  <GraduationCap size={72} className="text-primary" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-dark to-transparent" />
+                  <div className="absolute bottom-4 left-4 right-4 text-center">
+                    <span className="inline-block px-3 py-1 bg-primary text-dark text-[10px] font-bold rounded-full mb-2">
+                      {selectedLessonForModal.category === 'open' ? 'مسار مفتوح' : 'مسار مغلق'}
+                    </span>
+                    <h2 className="text-2xl font-bold">{selectedLessonForModal.title}</h2>
+                  </div>
+                </div>
+
+                <div className="p-8 space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-white/90">عن هذا الدرس</h3>
+                    <p className="text-white/60 leading-relaxed">
+                      {selectedLessonForModal.description || 'هذا الدرس مصمم لتعميق فهمك لمبادئ الفيزياء. يتضمن المحتوى شرحاً مرئياً مفصلاً، مذكرات للتحميل، واختباراً تقييمياً لقياس مستوى استيعابك.'}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                      <div className="flex items-center gap-2 text-primary mb-2 text-sm font-medium">
+                        <Activity size={16} />
+                        مرات المشاهدة
+                      </div>
+                      <div className="text-2xl font-bold">
+                        {loadingProgress ? '...' : (lessonProgress?.views || 0)}
+                      </div>
+                    </div>
+                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                      <div className="flex items-center gap-2 text-primary mb-2 text-sm font-medium">
+                        <Clock size={16} />
+                        آخر دخول
+                      </div>
+                      <div className="text-xs font-medium text-white/80">
+                        {loadingProgress ? '...' : (lessonProgress?.last_accessed ? new Date(lessonProgress.last_accessed).toLocaleDateString('ar-EG') : 'لم يبدأ بعد')}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => navigate(`/learning/${selectedLessonForModal.id}`)}
+                    className="btn-primary w-full py-4 flex items-center justify-center gap-2 text-lg"
+                  >
+                    ابدأ الدرس الآن
+                    <Play size={20} fill="currentColor" />
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
         
         {/* General Materials Section */}
         {!selectedCategory && materials.length > 0 && (

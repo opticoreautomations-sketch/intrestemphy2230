@@ -16,7 +16,9 @@ import {
   BarChart2,
   PieChart as PieChartIcon,
   UserCheck,
-  Activity
+  Activity,
+  MessageSquare,
+  Star as StarIcon
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { toast } from 'react-hot-toast';
@@ -37,9 +39,10 @@ import {
 } from 'recharts';
 
 export const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'stats' | 'content' | 'students' | 'materials'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'content' | 'students' | 'materials' | 'feedback'>('stats');
   const [stats, setStats] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
+  const [feedback, setFeedback] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -52,6 +55,9 @@ export const AdminDashboard: React.FC = () => {
       const data = await api.admin.getStats();
       setStudents(data.students || []);
       setStats(data);
+      
+      const feedbackData = await api.feedback.getAll();
+      setFeedback(feedbackData);
     } catch (error) {
       toast.error('فشل تحميل البيانات');
     } finally {
@@ -83,6 +89,7 @@ export const AdminDashboard: React.FC = () => {
             <TabButton active={activeTab === 'stats'} onClick={() => setActiveTab('stats')} label="الإحصائيات" icon={<BarChart3 size={18} />} />
             <TabButton active={activeTab === 'content'} onClick={() => setActiveTab('content')} label="الدروس" icon={<Video size={18} />} />
             <TabButton active={activeTab === 'materials'} onClick={() => setActiveTab('materials')} label="المصادر الخارجية" icon={<FileUp size={18} />} />
+            <TabButton active={activeTab === 'feedback'} onClick={() => setActiveTab('feedback')} label="آراء الطلاب" icon={<MessageSquare size={18} />} />
             <TabButton active={activeTab === 'students'} onClick={() => setActiveTab('students')} label="الطلاب" icon={<Users size={18} />} />
           </div>
         </div>
@@ -90,11 +97,59 @@ export const AdminDashboard: React.FC = () => {
         {activeTab === 'stats' && <StatsView stats={stats} />}
         {activeTab === 'content' && <ContentView />}
         {activeTab === 'materials' && <MaterialsView />}
+        {activeTab === 'feedback' && <FeedbackView feedback={feedback} />}
         {activeTab === 'students' && <StudentsView students={students} onDelete={deleteStudent} />}
       </div>
     </div>
   );
 };
+
+const FeedbackView: React.FC<{ feedback: any[] }> = ({ feedback }) => (
+  <div className="space-y-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {feedback.length === 0 ? (
+        <div className="glass-card p-12 text-center col-span-full">
+          <MessageSquare className="mx-auto text-white/10 mb-4" size={48} />
+          <p className="text-white/40">لا يوجد تقييمات بعد</p>
+        </div>
+      ) : (
+        feedback.map((item) => (
+          <motion.div 
+            key={item.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card p-6 flex flex-col justify-between hover:border-primary/50 transition-colors"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex text-primary">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <StarIcon 
+                      key={s} 
+                      size={16} 
+                      fill={item.rating >= s ? 'currentColor' : 'none'} 
+                      className={item.rating >= s ? 'text-primary' : 'text-white/10'}
+                    />
+                  ))}
+                </div>
+                <span className="text-[10px] text-white/40 font-mono">
+                  {new Date(item.created_at).toLocaleDateString('ar-EG')}
+                </span>
+              </div>
+              
+              <h4 className="font-bold text-sm mb-1">{item.student_name}</h4>
+              <p className="text-xs text-primary mb-3">درس: {item.lesson_title}</p>
+              
+              <p className="text-white/70 text-sm italic leading-relaxed border-r-2 border-primary/20 pr-4">
+                "{item.comment || 'بدون تعليق'}"
+              </p>
+            </div>
+          </motion.div>
+        ))
+      )}
+    </div>
+  </div>
+);
 
 const TabButton: React.FC<{ active: boolean; onClick: () => void; label: string; icon: React.ReactNode }> = ({ active, onClick, label, icon }) => (
   <button 
@@ -251,6 +306,7 @@ const ContentView: React.FC = () => {
   const [editingLesson, setEditingLesson] = useState<any>(null);
   const [formData, setFormData] = useState({
     title: '',
+    description: '',
     video_url: '',
     pdf_url: '',
     booklet_url: '',
@@ -283,7 +339,7 @@ const ContentView: React.FC = () => {
         ...formData 
       });
       toast.success(editingLesson ? 'تم تحديث الدرس' : 'تم إضافة الدرس بنجاح');
-      setFormData({ title: '', video_url: '', pdf_url: '', booklet_url: '', test_url: '' });
+      setFormData({ title: '', description: '', video_url: '', pdf_url: '', booklet_url: '', test_url: '' });
       setEditingLesson(null);
       fetchLessons();
     } catch (error) {
@@ -306,6 +362,7 @@ const ContentView: React.FC = () => {
     setEditingLesson(lesson);
     setFormData({
       title: lesson.title,
+      description: lesson.description || '',
       video_url: lesson.video_url || '',
       pdf_url: lesson.pdf_url || '',
       booklet_url: lesson.booklet_url || '',
@@ -362,29 +419,42 @@ const ContentView: React.FC = () => {
             />
           </div>
 
+          <div className="space-y-2">
+            <label className="text-sm text-white/70">وصف الدرس</label>
+            <textarea 
+              className="input-field w-full min-h-[100px] py-4" 
+              placeholder="اكتب وصفاً موجزاً لمحتوى الدرس..."
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+            />
+          </div>
+
           <InputGroup 
-            label="رابط الفيديو (Video)" 
+            label="ملف الفيديو (Video)" 
             icon={<Video size={18} />} 
             value={formData.video_url} 
             onChange={(v) => setFormData({...formData, video_url: v})}
             onUpload={(file) => handleFileUpload('video_url', file)}
             isUploading={uploading === 'video_url'}
+            accept="video/*"
           />
           <InputGroup 
-            label="رابط ملف الـ PDF" 
+            label="ملف الـ PDF" 
             icon={<FileUp size={18} />} 
             value={formData.pdf_url} 
             onChange={(v) => setFormData({...formData, pdf_url: v})}
             onUpload={(file) => handleFileUpload('pdf_url', file)}
             isUploading={uploading === 'pdf_url'}
+            accept=".pdf"
           />
           <InputGroup 
-            label="رابط الكتيب (Booklet)" 
+            label="ملف الكتيب (Booklet)" 
             icon={<FileUp size={18} />} 
             value={formData.booklet_url} 
             onChange={(v) => setFormData({...formData, booklet_url: v})}
             onUpload={(file) => handleFileUpload('booklet_url', file)}
             isUploading={uploading === 'booklet_url'}
+            accept=".pdf,.doc,.docx"
           />
           <InputGroup 
             label="رابط الاختبار (Test)" 
@@ -401,7 +471,7 @@ const ContentView: React.FC = () => {
             </button>
             {editingLesson && (
               <button 
-                onClick={() => { setEditingLesson(null); setFormData({ title: '', video_url: '', pdf_url: '', booklet_url: '', test_url: '' }); }}
+                onClick={() => { setEditingLesson(null); setFormData({ title: '', description: '', video_url: '', pdf_url: '', booklet_url: '', test_url: '' }); }}
                 className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl transition-all"
               >
                 إلغاء
@@ -455,7 +525,8 @@ const InputGroup: React.FC<{
   onChange: (v: string) => void;
   onUpload?: (file: File) => void;
   isUploading?: boolean;
-}> = ({ label, icon, value, onChange, onUpload, isUploading }) => {
+  accept?: string;
+}> = ({ label, icon, value, onChange, onUpload, isUploading, accept }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   return (
@@ -469,7 +540,7 @@ const InputGroup: React.FC<{
           <button 
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="text-xs bg-white/10 hover:bg-white/20 px-2 py-1 rounded flex items-center gap-1 transition-colors disabled:opacity-50"
+            className={`text-xs px-3 py-1 rounded-lg flex items-center gap-1 transition-all ${isUploading ? 'bg-primary/20 text-primary' : 'bg-white/10 hover:bg-white/20 text-white/60 hover:text-white border border-white/5'}`}
           >
             <FileUp size={12} />
             {isUploading ? 'جاري الرفع...' : 'رفع ملف'}
@@ -489,6 +560,7 @@ const InputGroup: React.FC<{
             type="file" 
             ref={fileInputRef}
             className="hidden"
+            accept={accept}
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) onUpload(file);
@@ -600,6 +672,7 @@ const MaterialsView: React.FC = () => {
               onChange={(v) => setFormData({...formData, url: v})}
               onUpload={handleFileUpload}
               isUploading={uploading}
+              accept=".pdf"
             />
           ) : (
             <InputGroup 

@@ -96,6 +96,21 @@ export const api = {
         body: JSON.stringify({ lesson_id: lessonId }),
       });
     },
+    async getByLesson(lessonId: string | number) {
+      return api.fetch(`/progress/${lessonId}`);
+    },
+  },
+
+  feedback: {
+    async submit(data: { lesson_id: number; rating: number; comment: string }) {
+      return api.fetch("/feedback", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    async getAll() {
+      return api.fetch("/admin/feedback");
+    },
   },
 
   materials: {

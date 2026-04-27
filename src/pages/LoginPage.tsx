@@ -16,9 +16,9 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await login({ email, password });
+      const userData = await login({ email, password });
       toast.success('تم تسجيل الدخول بنجاح');
-      navigate('/');
+      navigate(userData.role === 'teacher' ? '/admin' : '/home');
     } catch (error: any) {
       toast.error(error.message || 'فشل تسجيل الدخول');
     } finally {

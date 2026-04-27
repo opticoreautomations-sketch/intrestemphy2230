@@ -7,6 +7,7 @@ import { Navbar } from './components/Navbar';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { LandingPage } from './pages/LandingPage';
 import { HomePage } from './pages/HomePage';
 import { LearningPage } from './pages/LearningPage';
 import { AdminDashboard } from './pages/AdminDashboard';
@@ -19,6 +20,7 @@ export default function App() {
           <Navbar />
           <Routes>
             {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -26,7 +28,7 @@ export default function App() {
 
             {/* Protected Student Routes */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<HomePage />} />
+              <Route path="/home" element={<HomePage />} />
               <Route path="/learning/:lessonId" element={<LearningPage />} />
             </Route>
 

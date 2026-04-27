@@ -18,7 +18,7 @@ export const ProtectedRoute: React.FC<{ role?: 'student' | 'teacher' }> = ({ rol
   }
 
   if (role === 'teacher' && !isTeacher) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return <Outlet />;

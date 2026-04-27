@@ -53,6 +53,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     category TEXT, -- 'open' or 'close'
     title TEXT,
+    description TEXT,
     video_url TEXT,
     pdf_url TEXT,
     booklet_url TEXT,
@@ -71,6 +72,17 @@ db.exec(`
     FOREIGN KEY(lesson_id) REFERENCES lessons(id)
   );
 
+  CREATE TABLE IF NOT EXISTS feedback (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id TEXT,
+    lesson_id INTEGER,
+    rating INTEGER,
+    comment TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(student_id) REFERENCES profiles(id),
+    FOREIGN KEY(lesson_id) REFERENCES lessons(id)
+  );
+
   CREATE TABLE IF NOT EXISTS materials (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT,
@@ -83,6 +95,13 @@ db.exec(`
   INSERT OR IGNORE INTO lessons (id, category, title) VALUES (1, 'open', 'الدرس الأول (تجريبي)');
   INSERT OR IGNORE INTO lessons (id, category, title) VALUES (2, 'close', 'الدرس الثاني (تجريبي)');
 `);
+
+// Schema Migrations
+try {
+  db.prepare("ALTER TABLE lessons ADD COLUMN description TEXT").run();
+} catch (e) {
+  // Column already exists or error
+}
 
 // Default Admin (Teacher)
 const adminPassword = bcrypt.hashSync("admin123", 10);
@@ -203,20 +222,20 @@ app.get("/api/lesson/:id", authenticate, (req, res) => {
 // Lessons: Create or Update (Teacher only)
 app.post("/api/lessons", authenticate, (req: any, res) => {
   if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
-  const { id, category, title, video_url, pdf_url, booklet_url, test_url } = req.body;
+  const { id, category, title, description, video_url, pdf_url, booklet_url, test_url } = req.body;
   
   if (id) {
     db.prepare(`
       UPDATE lessons 
-      SET category = ?, title = ?, video_url = ?, pdf_url = ?, booklet_url = ?, test_url = ?
+      SET category = ?, title = ?, description = ?, video_url = ?, pdf_url = ?, booklet_url = ?, test_url = ?
       WHERE id = ?
-    `).run(category, title, video_url, pdf_url, booklet_url, test_url, id);
+    `).run(category, title, description, video_url, pdf_url, booklet_url, test_url, id);
     res.json({ message: "Lesson updated" });
   } else {
     db.prepare(`
-      INSERT INTO lessons (category, title, video_url, pdf_url, booklet_url, test_url)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(category, title, video_url, pdf_url, booklet_url, test_url);
+      INSERT INTO lessons (category, title, description, video_url, pdf_url, booklet_url, test_url)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(category, title, description, video_url, pdf_url, booklet_url, test_url);
     res.json({ message: "Lesson created" });
   }
 });
@@ -252,6 +271,13 @@ app.delete("/api/materials/:id", authenticate, (req: any, res) => {
   res.json({ message: "Material deleted" });
 });
 
+// Progress: Get progress for a lesson
+app.get("/api/progress/:lesson_id", authenticate, (req: any, res) => {
+  const progress = db.prepare("SELECT * FROM progress WHERE student_id = ? AND lesson_id = ?")
+    .get(req.user.id, req.params.lesson_id);
+  res.json(progress || { views: 0 });
+});
+
 // Progress: Track View
 app.post("/api/progress/view", authenticate, (req: any, res) => {
   const { lesson_id } = req.body;
@@ -261,6 +287,30 @@ app.post("/api/progress/view", authenticate, (req: any, res) => {
     ON CONFLICT(student_id, lesson_id) DO UPDATE SET views = views + 1, last_accessed = CURRENT_TIMESTAMP
   `).run(req.user.id, lesson_id);
   res.json({ message: "View tracked" });
+});
+
+// Feedback: Submit feedback
+app.post("/api/feedback", authenticate, (req: any, res) => {
+  const { lesson_id, rating, comment } = req.body;
+  if (!lesson_id || !rating) return res.status(400).json({ error: "Missing fields" });
+  
+  db.prepare("INSERT INTO feedback (student_id, lesson_id, rating, comment) VALUES (?, ?, ?, ?)")
+    .run(req.user.id, lesson_id, rating, comment);
+  res.json({ message: "Feedback submitted" });
+});
+
+// Feedback: Get for admin
+app.get("/api/admin/feedback", authenticate, (req: any, res) => {
+  if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
+  
+  const feedback = db.prepare(`
+    SELECT f.*, p.full_name as student_name, l.title as lesson_title 
+    FROM feedback f
+    JOIN profiles p ON f.student_id = p.id
+    JOIN lessons l ON f.lesson_id = l.id
+    ORDER BY f.created_at DESC
+  `).all();
+  res.json(feedback);
 });
 
 // Admin: Get Stats
