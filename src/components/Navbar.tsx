@@ -18,9 +18,13 @@ export const Navbar: React.FC = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-bg/80 backdrop-blur-lg border-b border-border">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <Link to="/" className="text-primary font-bold text-xl flex items-center gap-2">
-            <span className="bg-primary text-dark w-8 h-8 rounded-lg flex items-center justify-center">P</span>
-            فيزياء
+          <Link to="/" className="flex items-center gap-2 group">
+            <img 
+              src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNjllZmU4MDQ4MjAwODE5MWI1NTgyMWQ3ZDQwZmRlMmQ6ZmlsZV8wMDAwMDAwMDYwNDQ3MjBhOWE3MWUyNWUxNzA1OWRlOSIsInRzIjoiMjA1NzAiLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6IjViZjE3NjJlNDI2YTc5NDhmMzlhM2E1MDIxNTlkMTkyOTBlMDJiYjE4ZDIyYTQ0Y2JiMjk1OTdmYmQ2MDE3N2YiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJjcCI6bnVsbCwibWEiOm51bGx9" 
+              alt="Logo" 
+              className="w-10 h-10 rounded-full object-cover border-2 border-primary/20 group-hover:border-primary transition-colors"
+            />
+            <span className="text-primary font-bold text-xl">عالم الفيزياء</span>
           </Link>
           
           <div className="hidden md:flex items-center gap-6">

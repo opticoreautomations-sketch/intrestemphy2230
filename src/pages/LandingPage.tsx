@@ -29,9 +29,13 @@ export const LandingPage: React.FC = () => {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-bold mb-8"
+            className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-bold mb-8"
           >
-            <Atom size={16} className="animate-spin-slow" />
+            <img 
+              src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNjllZmU4MDQ4MjAwODE5MWI1NTgyMWQ3ZDQwZmRlMmQ6ZmlsZV8wMDAwMDAwMDYwNDQ3MjBhOWE3MWUyNWUxNzA1OWRlOSIsInRzIjoiMjA1NzAiLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6IjViZjE3NjJlNDI2YTc5NDhmMzlhM2E1MDIxNTlkMTkyOTBlMDJiYjE4ZDIyYTQ0Y2JiMjk1OTdmYmQ2MDE3N2YiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJjcCI6bnVsbCwibWEiOm51bGx9" 
+              alt="Logo" 
+              className="w-8 h-8 rounded-full"
+            />
             منصة عالم الفيزياء التعليمية
           </motion.div>
           
@@ -130,9 +134,9 @@ export const LandingPage: React.FC = () => {
             >
               <div className="glass-card p-4 rotate-3 hover:rotate-0 transition-transform duration-500">
                 <img 
-                  src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=2000&auto=format&fit=crop" 
-                  alt="Physics Visualization" 
-                  className="rounded-xl w-full h-[400px] object-cover shadow-2xl"
+                  src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNjllZmU4MDQ4MjAwODE5MWI1NTgyMWQ3ZDQwZmRlMmQ6ZmlsZV8wMDAwMDAwMDYwNDQ3MjBhOWE3MWUyNWUxNzA1OWRlOSIsInRzIjoiMjA1NzAiLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6IjViZjE3NjJlNDI2YTc5NDhmMzlhM2E1MDIxNTlkMTkyOTBlMDJiYjE4ZDIyYTQ0Y2JiMjk1OTdmYmQ2MDE3N2YiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJjcCI6bnVsbCwibWEiOm51bGx9" 
+                  alt="Interactive Physics Visualization" 
+                  className="rounded-xl w-full h-[450px] object-cover shadow-2xl brightness-110"
                 />
               </div>
               <div className="absolute -bottom-8 -left-8 glass-card p-6 border-primary/20 -rotate-3 hover:rotate-0 transition-transform duration-500 hidden md:block">
@@ -198,8 +202,12 @@ export const LandingPage: React.FC = () => {
 
       {/* Footer */}
       <footer className="py-12 border-t border-border px-4 text-center bg-bg transition-colors duration-500">
-        <div className="flex items-center justify-center gap-2 mb-4 font-bold text-xl text-text">
-          <Atom className="text-primary" />
+        <div className="flex items-center justify-center gap-3 mb-4 font-bold text-xl text-text">
+          <img 
+            src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNjllZmU4MDQ4MjAwODE5MWI1NTgyMWQ3ZDQwZmRlMmQ6ZmlsZV8wMDAwMDAwMDYwNDQ3MjBhOWE3MWUyNWUxNzA1OWRlOSIsInRzIjoiMjA1NzAiLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6IjViZjE3NjJlNDI2YTc5NDhmMzlhM2E1MDIxNTlkMTkyOTBlMDJiYjE4ZDIyYTQ0Y2JiMjk1OTdmYmQ2MDE3N2YiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJjcCI6bnVsbCwibWEiOm51bGx9" 
+            alt="Logo" 
+            className="w-10 h-10 rounded-full"
+          />
           <span>عالم الفيزياء</span>
         </div>
         <p className="text-text/20 text-sm font-medium">© 2026 جميع الحقوق محفوظة لمنصة عالم الفيزياء التعليمية</p>
