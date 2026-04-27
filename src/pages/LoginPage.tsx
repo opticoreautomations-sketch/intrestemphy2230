@@ -34,16 +34,16 @@ export const LoginPage: React.FC = () => {
         className="glass-card p-8 w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <div className="bg-primary/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="bg-primary/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner">
             <LogIn className="text-primary" size={32} />
           </div>
-          <h1 className="text-2xl font-bold mb-2">تسجيل الدخول</h1>
-          <p className="text-white/60">أهلاً بك في منصة الفيزياء التعليمية</p>
+          <h1 className="text-2xl font-bold mb-2 text-text">تسجيل الدخول</h1>
+          <p className="text-text/60 font-medium">أهلاً بك في منصة الفيزياء التعليمية</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm text-white/70 block">البريد الإلكتروني</label>
+            <label className="text-sm text-text/70 block font-bold">البريد الإلكتروني</label>
             <input 
               type="email" 
               className="input-field w-full" 
@@ -54,7 +54,7 @@ export const LoginPage: React.FC = () => {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-white/70 block">كلمة المرور</label>
+            <label className="text-sm text-text/70 block font-bold">كلمة المرور</label>
             <input 
               type="password" 
               className="input-field w-full" 
@@ -64,7 +64,7 @@ export const LoginPage: React.FC = () => {
               required
             />
             <div className="flex justify-end">
-              <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+              <Link to="/forgot-password" name="forgot-password" className="text-xs text-primary hover:underline font-bold">
                 نسيت كلمة المرور؟
               </Link>
             </div>
@@ -72,18 +72,18 @@ export const LoginPage: React.FC = () => {
           <button 
             type="submit" 
             disabled={loading}
-            className="btn-primary w-full flex items-center justify-center gap-2"
+            className="btn-primary w-full flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
           >
             {loading ? 'جاري التحميل...' : 'دخول'}
           </button>
         </form>
 
         <div className="mt-6 text-center space-y-2">
-          <p className="text-white/60 text-sm">
-            ليس لديك حساب؟ <Link to="/signup" className="text-primary hover:underline">إنشاء حساب جديد</Link>
+          <p className="text-text/60 text-sm font-medium">
+            ليس لديك حساب؟ <Link to="/signup" name="signup-link" className="text-primary hover:underline font-bold">إنشاء حساب جديد</Link>
           </p>
-          <div className="pt-4 border-t border-white/10">
-            <Link to="/admin-login" className="text-white/40 text-xs flex items-center justify-center gap-1 hover:text-primary transition-colors">
+          <div className="pt-4 border-t border-border">
+            <Link to="/admin-login" name="admin-login-link" className="text-text/40 text-xs flex items-center justify-center gap-1 hover:text-primary transition-colors font-bold">
               <ShieldCheck size={14} />
               دخول المعلم
             </Link>

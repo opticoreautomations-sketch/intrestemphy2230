@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Navbar } from './components/Navbar';
 import { LoginPage } from './pages/LoginPage';
@@ -14,10 +15,11 @@ import { AdminDashboard } from './pages/AdminDashboard';
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="min-h-screen bg-dark text-white font-sans">
-          <Navbar />
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <div className="min-h-screen bg-bg text-text font-sans transition-colors duration-300">
+            <Navbar />
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
@@ -43,15 +45,17 @@ export default function App() {
           <Toaster 
             position="top-center"
             toastOptions={{
+              className: 'glass-card text-text border border-border',
               style: {
-                background: '#1E1E1E',
-                color: '#fff',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'var(--color-card)',
+                color: 'var(--color-text)',
+                backdropFilter: 'blur(8px)',
               },
             }}
           />
         </div>
       </Router>
     </AuthProvider>
+  </ThemeProvider>
   );
 }

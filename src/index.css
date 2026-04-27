@@ -4,6 +4,19 @@
   --color-primary: #FFC107;
   --color-dark: #1E1E1E;
   --color-darker: #121212;
+  --color-bg: #F8F9FA;
+  --color-text: #212529;
+  --color-card: #FFFFFF;
+  --color-border: #E9ECEF;
+  --color-glass: rgba(255, 255, 255, 0.7);
+}
+
+.dark {
+  --color-bg: #121212;
+  --color-text: #F8F9FA;
+  --color-card: #1E1E1E;
+  --color-border: #2D2D2D;
+  --color-glass: rgba(30, 30, 30, 0.7);
 }
 
 @layer base {
@@ -13,17 +26,17 @@
   }
   
   body {
-    @apply bg-dark text-white;
+    @apply bg-bg text-text transition-colors duration-300;
   }
 }
 
 .physics-bg {
-  background-image: radial-gradient(circle at 2px 2px, rgba(255, 193, 7, 0.05) 1px, transparent 0);
+  background-image: radial-gradient(circle at 2px 2px, rgba(255, 193, 7, 0.1) 1px, transparent 0);
   background-size: 40px 40px;
 }
 
 .glass-card {
-  @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl;
+  @apply bg-card backdrop-blur-md border border-border rounded-2xl shadow-sm dark:shadow-none;
 }
 
 .btn-primary {
@@ -31,5 +44,5 @@
 }
 
 .input-field {
-  @apply bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-right;
+  @apply bg-text/5 border border-border rounded-xl py-3 px-4 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-right text-text;
 }

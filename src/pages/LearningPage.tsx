@@ -98,30 +98,30 @@ export const LearningPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-dark">
+      <div className="min-h-screen flex items-center justify-center bg-bg">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-4 physics-bg">
+    <div className="min-h-screen pt-24 pb-12 px-4 physics-bg transition-colors duration-500">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <button 
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-white/60 hover:text-primary transition-colors"
+            className="flex items-center gap-2 text-text/60 hover:text-primary transition-colors font-bold"
           >
             <ArrowRight size={20} />
             العودة للرئيسية
           </button>
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-2xl font-bold text-text">
             {content?.title || 'عرض الدرس'}
           </h1>
         </div>
 
         {/* Video Section */}
-        <div className="glass-card overflow-hidden mb-12 aspect-video relative group">
+        <div className="glass-card overflow-hidden mb-12 aspect-video relative group shadow-2xl">
           {content?.video_url ? (
             isVideoFile(content.video_url) ? (
               <video 
@@ -139,9 +139,9 @@ export const LearningPage: React.FC = () => {
               />
             )
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center bg-white/5">
-              <PlayCircle size={64} className="text-white/20 mb-4" />
-              <p className="text-white/40">الفيديو غير متوفر حالياً</p>
+            <div className="w-full h-full flex flex-col items-center justify-center bg-bg/50">
+              <PlayCircle size={64} className="text-text/20 mb-4" />
+              <p className="text-text/40 font-bold italic">الفيديو غير متوفر حالياً</p>
             </div>
           )}
         </div>
@@ -184,29 +184,29 @@ export const LearningPage: React.FC = () => {
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="absolute inset-0 bg-dark/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-bg/80 backdrop-blur-sm"
               onClick={() => setShowFeedback(false)}
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="glass-card max-w-lg w-full relative z-10 p-8"
+              className="glass-card max-w-lg w-full relative z-10 p-8 shadow-2xl"
             >
               <button 
                 onClick={() => setShowFeedback(false)}
-                className="absolute top-4 right-4 text-white/40 hover:text-white"
+                className="absolute top-4 right-4 text-text/40 hover:text-text transition-colors"
               >
                 <X size={24} />
               </button>
 
-              <h2 className="text-2xl font-bold mb-6 text-center">ما رأيك في هذا الدرس؟</h2>
+              <h2 className="text-2xl font-bold mb-6 text-center text-text">ما رأيك في هذا الدرس؟</h2>
               
               <div className="flex justify-center gap-2 mb-8">
                 {[1, 2, 3, 4, 5].map((s) => (
                   <button 
                     key={s} 
                     onClick={() => setRating(s)}
-                    className={`p-2 transition-all ${rating >= s ? 'text-primary scale-110' : 'text-white/20 hover:text-white/40'}`}
+                    className={`p-2 transition-all ${rating >= s ? 'text-primary scale-110' : 'text-text/20 hover:text-text/40'}`}
                   >
                     <Star size={40} fill={rating >= s ? 'currentColor' : 'none'} />
                   </button>
@@ -223,7 +223,7 @@ export const LearningPage: React.FC = () => {
               <button 
                 onClick={handleFeedbackSubmit}
                 disabled={submitting}
-                className="btn-primary w-full py-4 flex items-center justify-center gap-2 text-lg"
+                className="btn-primary w-full py-4 flex items-center justify-center gap-2 text-lg shadow-lg shadow-primary/20"
               >
                 {submitting ? 'جاري الإرسال...' : 'إرسال التقييم'}
                 <Send size={20} />
@@ -246,11 +246,11 @@ const IconButton: React.FC<{
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
-    className="glass-card p-6 flex flex-col items-center gap-4 group"
+    className="glass-card p-6 flex flex-col items-center gap-4 group hover:shadow-lg transition-all"
   >
     <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all group-hover:shadow-lg ${color}`}>
       {icon}
     </div>
-    <span className="font-bold text-white/80">{label}</span>
+    <span className="font-bold text-text/80">{label}</span>
   </motion.button>
 );

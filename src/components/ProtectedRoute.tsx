@@ -7,7 +7,7 @@ export const ProtectedRoute: React.FC<{ role?: 'student' | 'teacher' }> = ({ rol
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-dark">
+      <div className="min-h-screen flex items-center justify-center bg-bg">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
       </div>
     );
