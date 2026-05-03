@@ -1,13 +1,16 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { LogOut, User, LayoutDashboard, BookOpen, Sun, Moon } from 'lucide-react';
+import { LogOut, User, LayoutDashboard, BookOpen, Sun, Moon, MessageSquare } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const { user, isTeacher, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  if (location.pathname === '/welcome') return null;
 
   const handleSignOut = async () => {
     await signOut();
@@ -35,6 +38,10 @@ export const Navbar: React.FC = () => {
                 لوحة التحكم
               </Link>
             )}
+            <Link to="/contact" className="text-text/70 hover:text-primary transition-colors flex items-center gap-1 font-medium">
+              <MessageSquare size={18} />
+              تواصل معنا
+            </Link>
             {user && !isTeacher && (
               <Link to="/home" className="text-text/70 hover:text-primary transition-colors flex items-center gap-1 font-medium">
                 <BookOpen size={18} />

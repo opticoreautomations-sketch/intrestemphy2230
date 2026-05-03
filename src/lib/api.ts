@@ -73,6 +73,9 @@ export const api = {
     async getByCategory(category: string) {
       return api.fetch(`/lessons/${category}`);
     },
+    async getAll() {
+      return api.fetch("/lessons/all");
+    },
     async getById(id: string) {
       return api.fetch(`/lesson/${id}`);
     },
@@ -139,12 +142,32 @@ export const api = {
         method: "DELETE",
       });
     },
+    async updateStudentAccess(id: string, access: { access_open: boolean; access_close: boolean }) {
+      return api.fetch(`/admin/students/${id}/access`, {
+        method: "PUT",
+        body: JSON.stringify(access),
+      });
+    },
     async upload(file: File) {
       const formData = new FormData();
       formData.append("file", file);
       return api.fetch("/admin/upload", {
         method: "POST",
         body: formData,
+      });
+    },
+    async importFromExternal(url: string) {
+      return api.fetch("/admin/import", {
+        method: "POST",
+        body: JSON.stringify({ url }),
+      });
+    },
+  },
+  contact: {
+    async sendMessage(data: { name: string; email: string; subject?: string; message: string }) {
+      return api.fetch("/contact", {
+        method: "POST",
+        body: JSON.stringify(data),
       });
     },
   },

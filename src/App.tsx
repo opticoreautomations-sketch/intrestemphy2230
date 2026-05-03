@@ -12,6 +12,8 @@ import { LandingPage } from './pages/LandingPage';
 import { HomePage } from './pages/HomePage';
 import { LearningPage } from './pages/LearningPage';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { WelcomePage } from './pages/WelcomePage';
+import { ContactPage } from './pages/ContactPage';
 
 export default function App() {
   return (
@@ -26,10 +28,12 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/contact" element={<ContactPage />} />
             <Route path="/admin-login" element={<LoginPage />} /> {/* Reusing login for now */}
 
             {/* Protected Student Routes */}
             <Route element={<ProtectedRoute />}>
+              <Route path="/welcome" element={<WelcomePage />} />
               <Route path="/home" element={<HomePage />} />
               <Route path="/learning/:lessonId" element={<LearningPage />} />
             </Route>

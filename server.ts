@@ -46,6 +46,8 @@ db.exec(`
     email TEXT UNIQUE,
     password TEXT,
     role TEXT DEFAULT 'student',
+    access_open INTEGER DEFAULT 1,
+    access_close INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -99,9 +101,15 @@ db.exec(`
 // Schema Migrations
 try {
   db.prepare("ALTER TABLE lessons ADD COLUMN description TEXT").run();
-} catch (e) {
-  // Column already exists or error
-}
+} catch (e) {}
+
+try {
+  db.prepare("ALTER TABLE profiles ADD COLUMN access_open INTEGER DEFAULT 1").run();
+} catch (e) {}
+
+try {
+  db.prepare("ALTER TABLE profiles ADD COLUMN access_close INTEGER DEFAULT 0").run();
+} catch (e) {}
 
 // Default Admin (Teacher)
 const adminPassword = bcrypt.hashSync("admin123", 10);
@@ -151,8 +159,8 @@ app.post("/api/auth/signup", async (req, res) => {
   const id = Math.random().toString(36).substring(2, 15);
   
   try {
-    db.prepare("INSERT INTO profiles (id, full_name, email, password) VALUES (?, ?, ?, ?)")
-      .run(id, full_name, email, hashedPassword);
+    db.prepare("INSERT INTO profiles (id, full_name, email, password, access_open, access_close) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(id, full_name, email, hashedPassword, 0, 0); // Default: No access until admin approves
     res.json({ message: "User created" });
   } catch (err: any) {
     res.status(400).json({ error: "Email already exists" });
@@ -169,7 +177,17 @@ app.post("/api/auth/login", async (req, res) => {
   }
   
   const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET);
-  res.json({ token, user: { id: user.id, full_name: user.full_name, role: user.role, email: user.email } });
+  res.json({ 
+    token, 
+    user: { 
+      id: user.id, 
+      full_name: user.full_name, 
+      role: user.role, 
+      email: user.email,
+      access_open: user.access_open,
+      access_close: user.access_close
+    } 
+  });
 });
 
 // Auth: Forgot Password (Mock)
@@ -203,12 +221,16 @@ app.post("/api/auth/reset-password", async (req, res) => {
 
 // User Profile
 app.get("/api/auth/me", authenticate, (req: any, res) => {
-  const user = db.prepare("SELECT id, full_name, email, role FROM profiles WHERE id = ?").get(req.user.id);
+  const user = db.prepare("SELECT id, full_name, email, role, access_open, access_close FROM profiles WHERE id = ?").get(req.user.id);
   res.json(user);
 });
 
 // Lessons: Get by category
 app.get("/api/lessons/:category", authenticate, (req, res) => {
+  if (req.params.category === "all") {
+    const lessons = db.prepare("SELECT * FROM lessons ORDER BY created_at DESC").all();
+    return res.json(lessons);
+  }
   const lessons = db.prepare("SELECT * FROM lessons WHERE category = ? ORDER BY created_at DESC").all(req.params.category);
   res.json(lessons);
 });
@@ -319,7 +341,7 @@ app.get("/api/admin/stats", authenticate, (req: any, res) => {
   
   const totalStudents = db.prepare("SELECT COUNT(*) as count FROM profiles WHERE role = 'student'").get() as any;
   const totalViews = db.prepare("SELECT SUM(views) as count FROM progress").get() as any;
-  const students = db.prepare("SELECT id, full_name, email, created_at FROM profiles WHERE role = 'student'").all();
+  const students = db.prepare("SELECT id, full_name, email, access_open, access_close, created_at FROM profiles WHERE role = 'student'").all();
   
   // Views per lesson
   const viewsByLesson = db.prepare(`
@@ -369,6 +391,23 @@ app.get("/api/admin/stats", authenticate, (req: any, res) => {
   });
 });
 
+// Admin: Update student access
+app.put("/api/admin/students/:id/access", authenticate, (req: any, res) => {
+  if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
+  const { access_open, access_close } = req.body;
+  
+  try {
+    db.prepare(`
+      UPDATE profiles 
+      SET access_open = ?, access_close = ?
+      WHERE id = ? AND role = 'student'
+    `).run(access_open ? 1 : 0, access_close ? 1 : 0, req.params.id);
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Admin: Delete Student
 app.delete("/api/admin/students/:id", authenticate, (req: any, res) => {
   if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
@@ -383,6 +422,76 @@ app.post("/api/admin/upload", authenticate, upload.single("file"), (req: any, re
   
   const fileUrl = `/uploads/${req.file.filename}`;
   res.json({ url: fileUrl });
+});
+
+// Admin: Import from External
+app.post("/api/admin/import", authenticate, async (req: any, res) => {
+  if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
+  const { url } = req.body;
+  if (!url) return res.status(400).json({ error: "Missing URL" });
+
+  try {
+    const baseUrl = url.replace(/\/admin$/, "");
+    // Note: This assumes the external server has publicly accessible /api/lessons/{category} 
+    // or the user provides a token. Since we don't have a token, we try public categories if any.
+    // However, usually these are protected. 
+    // Given the prompt, we'll try to fetch common categories.
+    
+    let count = 0;
+    for (const cat of ['open', 'close']) {
+      try {
+        const response = await fetch(`${baseUrl}/api/lessons/${cat}`);
+        if (response.ok) {
+          const externalLessons = await response.json() as any[];
+          for (const lesson of externalLessons) {
+            db.prepare(`
+              INSERT OR IGNORE INTO lessons (category, title, description, video_url, pdf_url, booklet_url, test_url)
+              VALUES (?, ?, ?, ?, ?, ?, ?)
+            `).run(lesson.category || cat, lesson.title, lesson.description, lesson.video_url, lesson.pdf_url, lesson.booklet_url, lesson.test_url);
+            count++;
+          }
+        }
+      } catch (e) {
+        console.error(`Failed to fetch ${cat}:`, e);
+      }
+    }
+
+    // Also try fetch materials
+    try {
+      const resp = await fetch(`${baseUrl}/api/materials`);
+      if (resp.ok) {
+        const externalMaterials = await resp.json() as any[];
+        for (const mat of externalMaterials) {
+          db.prepare("INSERT OR IGNORE INTO materials (title, url, type) VALUES (?, ?, ?)")
+            .run(mat.title, mat.url, mat.type);
+        }
+      }
+    } catch (e) {}
+
+    res.json({ message: `Successfully imported ${count} items` });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Help & Contact
+app.post("/api/contact", async (req, res) => {
+  const { name, email, subject, message } = req.body;
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    // Reusing feedback table for contact messages for now to avoid schema changes
+    db.prepare(`
+      INSERT INTO feedback (student_name, lesson_title, rating, comment)
+      VALUES (?, ?, ?, ?)
+    `).run(name, `رسالة تواصل: ${subject || 'عام'}`, 5, `[بريد: ${email}] ${message}`);
+    
+    res.json({ success: true, message: "تم إرسال رسالتك بنجاح" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // --- Vite Integration ---

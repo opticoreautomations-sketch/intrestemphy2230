@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play, Video, VideoOff, GraduationCap, ChevronLeft, ArrowRight, FileText, Link as LinkIcon, X, Clock, Activity } from 'lucide-react';
+import { Play, Video, VideoOff, GraduationCap, ChevronLeft, ArrowRight, FileText, Link as LinkIcon, X, Clock, Activity, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { toast } from 'react-hot-toast';
@@ -16,6 +16,7 @@ export const HomePage: React.FC = () => {
   const [selectedLessonForModal, setSelectedLessonForModal] = useState<any>(null);
   const [lessonProgress, setLessonProgress] = useState<any>(null);
   const [loadingProgress, setLoadingProgress] = useState(false);
+  const [sortBy, setSortBy] = useState<string>('newest');
 
   useEffect(() => {
     if (selectedCategory) {
@@ -77,48 +78,63 @@ export const HomePage: React.FC = () => {
         {!selectedCategory ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Open Video Path */}
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              onClick={() => setSelectedCategory('open')}
-              className="glass-card overflow-hidden group cursor-pointer border-2 border-transparent hover:border-primary/50 transition-all"
-            >
-              <div className="h-48 bg-primary/10 flex items-center justify-center relative">
-                <Video size={64} className="text-primary group-hover:scale-110 transition-transform" />
-                <div className="absolute inset-0 bg-gradient-to-t from-bg/80 to-transparent" />
-              </div>
-              <div className="p-8">
-                <h2 className="text-2xl font-bold mb-4 text-text">فيديو تفاعلي مفتوح</h2>
-                <p className="text-text/60 mb-6 font-medium">
-                   استكشف المفاهيم الفيزيائية من خلال تجربة فيديو تفاعلية مفتوحة تتيح لك حرية التنقل.
-                </p>
-                <div className="btn-primary w-full flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
-                  عرض الدروس
-                  <ChevronLeft size={20} />
+            {profile?.access_open !== 0 && (
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                onClick={() => setSelectedCategory('open')}
+                className="glass-card overflow-hidden group cursor-pointer border-2 border-transparent hover:border-primary/50 transition-all shadow-lg"
+              >
+                <div className="h-48 bg-primary/10 flex items-center justify-center relative">
+                  <Video size={64} className="text-primary group-hover:scale-110 transition-transform" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-bg/80 to-transparent" />
                 </div>
-              </div>
-            </motion.div>
+                <div className="p-8">
+                  <h2 className="text-2xl font-bold mb-4 text-text">فيديو تفاعلي مفتوح</h2>
+                  <p className="text-text/60 mb-6 font-medium">
+                    استكشف المفاهيم الفيزيائية من خلال تجربة فيديو تفاعلية مفتوحة تتيح لك حرية التنقل.
+                  </p>
+                  <div className="btn-primary w-full flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
+                    عرض الدروس
+                    <ChevronLeft size={20} />
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             {/* Close Video Path */}
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              onClick={() => setSelectedCategory('close')}
-              className="glass-card overflow-hidden group cursor-pointer border-2 border-transparent hover:border-text/20 transition-all"
-            >
-              <div className="h-48 bg-text/5 flex items-center justify-center relative">
-                <VideoOff size={64} className="text-text/40 group-hover:scale-110 transition-transform" />
-                <div className="absolute inset-0 bg-gradient-to-t from-bg/80 to-transparent" />
-              </div>
-              <div className="p-8">
-                <h2 className="text-2xl font-bold mb-4 text-text">فيديو تفاعلي مغلق</h2>
-                <p className="text-text/60 mb-6 font-medium">
-                  مسار تعليمي محكم يضمن تسلسل الأفكار وبناء المعرفة خطوة بخطوة.
-                </p>
-                <div className="btn-primary w-full flex items-center justify-center gap-2 shadow-lg shadow-white/10 dark:shadow-none">
-                  عرض الدروس
-                  <ChevronLeft size={20} />
+            {profile?.access_close === 1 && (
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                onClick={() => setSelectedCategory('close')}
+                className="glass-card overflow-hidden group cursor-pointer border-2 border-transparent hover:border-text/20 transition-all shadow-lg"
+              >
+                <div className="h-48 bg-text/5 flex items-center justify-center relative">
+                  <VideoOff size={64} className="text-text/40 group-hover:scale-110 transition-transform" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-bg/80 to-transparent" />
                 </div>
+                <div className="p-8">
+                  <h2 className="text-2xl font-bold mb-4 text-text">فيديو تفاعلي مغلق</h2>
+                  <p className="text-text/60 mb-6 font-medium">
+                    مسار تعليمي محكم يضمن تسلسل الأفكار وبناء المعرفة خطوة بخطوة.
+                  </p>
+                  <div className="btn-primary w-full flex items-center justify-center gap-2 shadow-lg shadow-white/10 dark:shadow-none">
+                    عرض الدروس
+                    <ChevronLeft size={20} />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {profile?.access_open === 0 && profile?.access_close === 0 && (
+              <div className="col-span-full glass-card p-12 text-center shadow-xl">
+                <VideoOff size={64} className="mx-auto text-text/10 mb-6" />
+                <h2 className="text-2xl font-bold text-text mb-4">لا يزال مسارك التعليمي قيد الإعداد</h2>
+                <p className="text-text/60 max-w-md mx-auto font-medium">
+                  يرجى التواصل مع الإدارة لتفعيل حسابك والبدء في استكشاف الدروس المتاحة.
+                </p>
+                <Link to="/contact" className="mt-8 inline-block btn-primary px-8">تواصل معنا</Link>
               </div>
-            </motion.div>
+            )}
           </div>
         ) : (
           <motion.div 
@@ -126,18 +142,52 @@ export const HomePage: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             className="space-y-8"
           >
-            <div className="flex items-center justify-between">
-              <button 
-                onClick={() => setSelectedCategory(null)}
-                className="flex items-center gap-2 text-text/60 hover:text-primary transition-colors font-bold"
-              >
-                <ArrowRight size={20} />
-                العودة للمسارات
-              </button>
-              <h2 className="text-2xl font-bold text-text">
-                دروس {selectedCategory === 'open' ? 'الفيديو المفتوح' : 'الفيديو المغلق'}
-              </h2>
-            </div>
+              <div className="flex items-center justify-between">
+                <button 
+                  onClick={() => setSelectedCategory(null)}
+                  className="flex items-center gap-2 text-text/60 hover:text-primary transition-colors font-bold"
+                >
+                  <ArrowRight size={20} />
+                  العودة للمسارات
+                </button>
+                
+                <div className="flex items-center gap-4">
+                  <div className="relative group hidden sm:block">
+                    <select 
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="appearance-none bg-text/5 border border-border/50 text-text text-sm rounded-xl px-4 py-2 pr-10 focus:outline-none focus:border-primary/50 font-bold cursor-pointer"
+                    >
+                      <option value="newest">الأحدث أولاً</option>
+                      <option value="oldest">الأقدم أولاً</option>
+                      <option value="title-asc">الاسم (أ-ي)</option>
+                      <option value="title-desc">الاسم (ي-أ)</option>
+                    </select>
+                    <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-text/40 pointer-events-none group-hover:text-primary transition-colors" />
+                  </div>
+                  
+                  <h2 className="text-2xl font-bold text-text">
+                    دروس {selectedCategory === 'open' ? 'الفيديو المفتوح' : 'الفيديو المغلق'}
+                  </h2>
+                </div>
+              </div>
+
+              {/* Mobile Sort */}
+              <div className="sm:hidden flex justify-end">
+                <div className="relative group w-full">
+                  <select 
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="appearance-none w-full bg-text/5 border border-border/50 text-text text-sm rounded-xl px-4 py-2 pr-10 focus:outline-none focus:border-primary/50 font-bold cursor-pointer"
+                  >
+                    <option value="newest">الأحدث أولاً</option>
+                    <option value="oldest">الأقدم أولاً</option>
+                    <option value="title-asc">الاسم (أ-ي)</option>
+                    <option value="title-desc">الاسم (ي-أ)</option>
+                  </select>
+                  <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-text/40 pointer-events-none" />
+                </div>
+              </div>
 
             {loading ? (
               <div className="flex justify-center py-20">
@@ -150,9 +200,17 @@ export const HomePage: React.FC = () => {
                     <p className="text-text/40 font-bold italic">لا توجد دروس مضافة في هذا القسم حالياً</p>
                   </div>
                 ) : (
-                  lessons.map((lesson) => (
-                    <motion.div
-                      key={lesson.id}
+                  [...lessons]
+                    .sort((a, b) => {
+                      if (sortBy === 'title-asc') return a.title.localeCompare(b.title, 'ar');
+                      if (sortBy === 'title-desc') return b.title.localeCompare(a.title, 'ar');
+                      if (sortBy === 'newest') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                      if (sortBy === 'oldest') return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+                      return 0;
+                    })
+                    .map((lesson) => (
+                      <motion.div
+                        key={lesson.id}
                       whileHover={{ scale: 1.02 }}
                       className="glass-card overflow-hidden group cursor-pointer hover:shadow-xl transition-all"
                       onClick={() => handleLessonClick(lesson)}

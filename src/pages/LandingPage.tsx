@@ -210,7 +210,12 @@ export const LandingPage: React.FC = () => {
           />
           <span>عالم الفيزياء</span>
         </div>
-        <p className="text-text/20 text-sm font-medium">© 2026 جميع الحقوق محفوظة لمنصة عالم الفيزياء التعليمية</p>
+        <p className="text-text/20 text-sm font-medium mb-4">© 2026 جميع الحقوق محفوظة لمنصة عالم الفيزياء التعليمية</p>
+        <div className="flex justify-center gap-6">
+          <Link to="/contact" className="text-sm font-bold text-text/40 hover:text-primary transition-colors">تواصل معنا</Link>
+          <a href="#" className="text-sm font-bold text-text/40 hover:text-primary transition-colors">سياسة الخصوصية</a>
+          <a href="#" className="text-sm font-bold text-text/40 hover:text-primary transition-colors">الشروط والأحكام</a>
+        </div>
       </footer>
     </div>
   );
