@@ -133,6 +133,22 @@ export const api = {
     },
   },
 
+  supervisors: {
+    async getAll() {
+      return api.fetch("/supervisors");
+    },
+    async create(data: { name: string; image_url: string }) {
+      return api.fetch("/admin/supervisors", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    async delete(id: string | number) {
+      return api.fetch(`/admin/supervisors/${id}`, {
+        method: "DELETE",
+      });
+    },
+  },
   admin: {
     async getStats() {
       return api.fetch("/admin/stats");

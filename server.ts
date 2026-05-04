@@ -74,6 +74,15 @@ db.exec(`
     FOREIGN KEY(lesson_id) REFERENCES lessons(id)
   );
 
+  CREATE TABLE IF NOT EXISTS contact_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    email TEXT,
+    subject TEXT,
+    message TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS feedback (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id TEXT,
@@ -90,6 +99,13 @@ db.exec(`
     title TEXT,
     url TEXT,
     type TEXT, -- 'pdf' or 'link'
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS supervisors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    image_url TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -141,12 +157,12 @@ app.use("/uploads", express.static(uploadDir));
 // Middleware: Auth
 const authenticate = (req: any, res: any, next: any) => {
   const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ error: "Unauthorized" });
+  if (!token) return res.status(401).json({ error: "غير مصرح لك - يرجى تسجيل الدخول أولاً" });
   try {
     req.user = jwt.verify(token, JWT_SECRET);
     next();
   } catch (err) {
-    res.status(401).json({ error: "Invalid token" });
+    res.status(401).json({ error: "جلسة غير صالحة - يرجى تسجيل الدخول مجدداً" });
   }
 };
 
@@ -173,7 +189,7 @@ app.post("/api/auth/login", async (req, res) => {
   const user: any = db.prepare("SELECT * FROM profiles WHERE email = ?").get(email);
   
   if (!user || !(await bcrypt.compare(password, user.password))) {
-    return res.status(401).json({ error: "Invalid credentials" });
+    return res.status(401).json({ error: "بيانات الدخول غير صحيحة" });
   }
   
   const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET);
@@ -415,6 +431,38 @@ app.delete("/api/admin/students/:id", authenticate, (req: any, res) => {
   res.json({ message: "Student deleted" });
 });
 
+// Supervisors: Get all (public)
+app.get("/api/supervisors", (req, res) => {
+  const supervisors = db.prepare("SELECT * FROM supervisors ORDER BY created_at ASC").all();
+  res.json(supervisors);
+});
+
+// Admin: Add Supervisor
+app.post("/api/admin/supervisors", authenticate, (req: any, res) => {
+  if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
+  const { name, image_url } = req.body;
+  
+  if (!name || !image_url) return res.status(400).json({ error: "Missing fields" });
+  
+  try {
+    const result = db.prepare("INSERT INTO supervisors (name, image_url) VALUES (?, ?)").run(name, image_url);
+    res.json({ id: result.lastInsertRowid, message: "Supervisor created" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: Delete Supervisor
+app.delete("/api/admin/supervisors/:id", authenticate, (req: any, res) => {
+  if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
+  try {
+    db.prepare("DELETE FROM supervisors WHERE id = ?").run(req.params.id);
+    res.json({ message: "Supervisor deleted" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Admin: Upload File
 app.post("/api/admin/upload", authenticate, upload.single("file"), (req: any, res) => {
   if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
@@ -482,11 +530,10 @@ app.post("/api/contact", async (req, res) => {
   }
 
   try {
-    // Reusing feedback table for contact messages for now to avoid schema changes
     db.prepare(`
-      INSERT INTO feedback (student_name, lesson_title, rating, comment)
+      INSERT INTO contact_messages (name, email, subject, message)
       VALUES (?, ?, ?, ?)
-    `).run(name, `رسالة تواصل: ${subject || 'عام'}`, 5, `[بريد: ${email}] ${message}`);
+    `).run(name, email, subject, message);
     
     res.json({ success: true, message: "تم إرسال رسالتك بنجاح" });
   } catch (error: any) {

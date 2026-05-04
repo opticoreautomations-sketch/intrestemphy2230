@@ -45,12 +45,13 @@ import {
 } from 'recharts';
 
 export const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'stats' | 'content' | 'students' | 'materials' | 'feedback'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'content' | 'students' | 'materials' | 'feedback' | 'supervisors'>('stats');
   const [stats, setStats] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
   const [lessons, setLessons] = useState<any[]>([]);
   const [materials, setMaterials] = useState<any[]>([]);
   const [feedback, setFeedback] = useState<any[]>([]);
+  const [supervisors, setSupervisors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
@@ -75,6 +76,9 @@ export const AdminDashboard: React.FC = () => {
       
       const feedbackData = await api.feedback.getAll();
       setFeedback(feedbackData);
+
+      const supervisorsData = await api.supervisors.getAll();
+      setSupervisors(supervisorsData);
     } catch (error) {
       console.error(error);
       toast.error('فشل تحميل البيانات');
@@ -113,7 +117,7 @@ export const AdminDashboard: React.FC = () => {
             <div className="glass-card p-6 shadow-xl border border-border flex flex-col items-center text-center">
               <div className="relative mb-4">
                 <img 
-                  src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNjllZmU4MDQ4MjAwODE5MWI1NTgyMWQ3ZDQwZmRlMmQ6ZmlsZV8wMDAwMDAwMDYwNDQ3MjBhOWE3MWUyNWUxNzA1OWRlOSIsInRzIjoiMjA1NzAiLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6IjViZjE3NjJlNDI2YTc5NDhmMzlhM2E1MDIxNTlkMTkyOTBlMDJiYjE4ZDIyYTQ0Y2JiMjk1OTdmYmQ2MDE3N2YiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJjcCI6bnVsbCwibWEiOm51bGx9" 
+                  src="https://images.unsplash.com/photo-1464802686167-b939a6910659?auto=format&fit=crop&q=80&w=200" 
                   alt="Logo" 
                   className="w-20 h-20 rounded-full border-4 border-primary/20 shadow-lg"
                 />
@@ -174,6 +178,7 @@ export const AdminDashboard: React.FC = () => {
                 <NavButton active={activeTab === 'materials'} onClick={() => setActiveTab('materials')} label="المصادر الخارجية" icon={<FileUp size={18} />} />
                 <NavButton active={activeTab === 'feedback'} onClick={() => setActiveTab('feedback')} label="آراء الطلاب" icon={<MessageSquare size={18} />} />
                 <NavButton active={activeTab === 'students'} onClick={() => setActiveTab('students')} label="قائمة الطلاب" icon={<Users size={18} />} />
+                <NavButton active={activeTab === 'supervisors'} onClick={() => setActiveTab('supervisors')} label="إدارة المشرفين" icon={<Users size={18} />} />
               </div>
             </nav>
 
@@ -224,10 +229,12 @@ export const AdminDashboard: React.FC = () => {
                 {activeTab === 'content' && <Video className="text-primary" />}
                 {activeTab === 'materials' && <FileUp className="text-primary" />}
                 {activeTab === 'feedback' && <MessageSquare className="text-primary" />}
-                {activeTab === 'students' && <Users className="text-primary" />}
+                {activeTab === 'students' && <Users className="text-primary" size={24} />}
+                {activeTab === 'supervisors' && <span className="text-primary"><Users size={24} /></span>}
                 {activeTab === 'stats' ? 'نظرة عامة على الإحصائيات' : 
                  activeTab === 'content' ? 'إدارة محتوى الدروس' :
                  activeTab === 'materials' ? 'إدارة المصادر الخارجية' :
+                 activeTab === 'supervisors' ? 'إدارة المشرفين' :
                  activeTab === 'feedback' ? 'متابعة تقييمات الطلاب' : 'إدارة الطلاب المستفيدين'}
               </h1>
               <p className="text-text/60 font-medium">أهلاً بك مجدداً، استمر في مراقبة وتطوير منصتك التعليمية.</p>
@@ -246,6 +253,7 @@ export const AdminDashboard: React.FC = () => {
                 {activeTab === 'materials' && <MaterialsView materials={materials} onRefresh={fetchDashboardData} />}
                 {activeTab === 'feedback' && <FeedbackView feedback={feedback} />}
                 {activeTab === 'students' && <StudentsView students={students} onDelete={deleteStudent} onUpdateAccess={updateStudentAccess} />}
+                {activeTab === 'supervisors' && <SupervisorsView supervisors={supervisors} onRefresh={fetchDashboardData} />}
               </motion.div>
             </AnimatePresence>
           </main>
@@ -987,6 +995,90 @@ const StudentsView: React.FC<{ students: any[]; onDelete: (id: string) => void; 
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+  );
+};
+
+const SupervisorsView: React.FC<{ supervisors: any[]; onRefresh: () => void }> = ({ supervisors, onRefresh }) => {
+  const [formData, setFormData] = useState({ name: '', image_url: '' });
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await api.supervisors.create(formData);
+      toast.success('تمت إضافة المشرف بنجاح');
+      setFormData({ name: '', image_url: '' });
+      onRefresh();
+    } catch (error) {
+      toast.error('فشل إضافة المشرف');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('هل أنت متأكد من حذف هذا المشرف؟')) return;
+    try {
+      await api.supervisors.delete(id);
+      toast.success('تم حذف المشرف');
+      onRefresh();
+    } catch (error) {
+      toast.error('فشل حذف المشرف');
+    }
+  };
+
+  return (
+    <div className="space-y-6 text-right">
+      <div className="glass-card shadow-lg border border-border p-6">
+        <h3 className="text-xl font-bold mb-4 text-text">إضافة مشرف جديد</h3>
+        <form onSubmit={handleAdd} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-text/80 mb-2">اسم المشرف</label>
+              <input 
+                type="text" 
+                required
+                value={formData.name}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                className="w-full bg-bg border border-border/50 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary transition-all text-right"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-text/80 mb-2">رابط صورة المشرف (URL)</label>
+              <input 
+                type="text" 
+                required
+                value={formData.image_url}
+                onChange={e => setFormData({ ...formData, image_url: e.target.value })}
+                className="w-full bg-bg border border-border/50 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary transition-all text-right"
+              />
+            </div>
+          </div>
+          <button type="submit" className="px-6 py-2 bg-primary text-dark font-bold rounded-xl shadow-lg hover:shadow-primary/20 hover:-translate-y-1 transition-all">
+            إضافة مشرف
+          </button>
+        </form>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {supervisors.map(sup => (
+          <div key={sup.id} className="glass-card p-4 border border-border flex flex-col items-center">
+            <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-primary/20">
+              <img src={sup.image_url} alt={sup.name} className="w-full h-full object-cover" />
+            </div>
+            <h4 className="font-bold text-text mb-4 text-center">{sup.name}</h4>
+            <button 
+              onClick={() => handleDelete(sup.id)}
+              className="px-4 py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all text-sm font-bold"
+            >
+              حذف
+            </button>
+          </div>
+        ))}
+        {supervisors.length === 0 && (
+          <div className="col-span-full py-12 text-center text-text/40 font-bold italic">
+            لا يوجد مشرفين حالياً
+          </div>
+        )}
       </div>
     </div>
   );

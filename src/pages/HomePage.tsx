@@ -62,7 +62,18 @@ export const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 physics-bg transition-colors duration-500">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-12 text-center">
+        <header className="mb-12 text-center relative">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-32 h-32 md:w-48 md:h-48 mx-auto mb-6 rounded-full overflow-hidden border-4 border-primary/20 shadow-xl"
+          >
+            <img 
+              src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=500" 
+              alt="Welcome Student" 
+              className="w-full h-full object-cover"
+            />
+          </motion.div>
           <motion.h1 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}

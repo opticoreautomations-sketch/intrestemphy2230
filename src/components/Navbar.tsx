@@ -23,7 +23,7 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center gap-2 group">
             <img 
-              src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNjllZmU4MDQ4MjAwODE5MWI1NTgyMWQ3ZDQwZmRlMmQ6ZmlsZV8wMDAwMDAwMDYwNDQ3MjBhOWE3MWUyNWUxNzA1OWRlOSIsInRzIjoiMjA1NzAiLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6IjViZjE3NjJlNDI2YTc5NDhmMzlhM2E1MDIxNTlkMTkyOTBlMDJiYjE4ZDIyYTQ0Y2JiMjk1OTdmYmQ2MDE3N2YiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJjcCI6bnVsbCwibWEiOm51bGx9" 
+              src="https://images.unsplash.com/photo-1464802686167-b939a6910659?auto=format&fit=crop&q=80&w=200" 
               alt="Logo" 
               className="w-10 h-10 rounded-full object-cover border-2 border-primary/20 group-hover:border-primary transition-colors"
             />
