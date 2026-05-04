@@ -50,7 +50,7 @@ export const LandingPage: React.FC = () => {
       <section className="relative pt-32 pb-20 px-4 overflow-hidden">
         <div className="absolute inset-0 z-0 opacity-100 transition-opacity duration-1000">
           <img 
-            src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNjlmOTAyODYyNTI0ODE5MTgwNzUyYzE4ZjgzYmZlMDk6ZmlsZV8wMDAwMDAwMDE3NTQ3MWY0ODY3MTJmNWY3NjU3ZDJiNyIsInRzIjoiMjA1NzciLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6IjMxZTBjNjhiNGFlNzQ4Y2FhN2I3MWVhMzhjNGFiMTA4MGM0MWU1Mjg3YWEwMGUzOGZjMGI1N2M2ZTE4NTRiNzUiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJmbiI6bnVsbCwiY2QiOm51bGwsImNwIjpudWxsLCJtYSI6bnVsbH0=" 
+            src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNjlmOTBkMmI1NGIwODE5MTg4NDU2YjU1NTQ3Mjg2ZmI6ZmlsZV8wMDAwMDAwMDgwNmM3MjQ2YmIxYzlmODJiOTFiZDAyMyIsInRzIjoiMjA1NzciLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6ImI5OTFkM2IwMjQ0ZDY4MWY5YjAyMzhkMjYwYTE2NzU2NjM2NjFjYmE4ZWYzNGM5YjQ2NmQ1OTdkN2Y3NzZkZTEiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJmbiI6bnVsbCwiY2QiOm51bGwsImNwIjpudWxsLCJtYSI6bnVsbH0=" 
             alt="Physics Learning" 
             className="w-full h-full object-cover transition-all duration-1000"
           />
@@ -181,7 +181,7 @@ export const LandingPage: React.FC = () => {
             >
               <div className="glass-card p-4 rotate-3 hover:rotate-0 transition-transform duration-500">
                 <img 
-                  src="https://images.unsplash.com/photo-1614729939124-032f0b56c9ce?auto=format&fit=crop&q=80&w=2000" 
+                  src="https://t4.ftcdn.net/jpg/01/02/00/87/240_F_102008713_tioUIlZW4RyKo8K6FCZ88BW239zgTdWD.jpg" 
                   alt="Interactive Physics Visualization" 
                   className="rounded-xl w-full h-[450px] object-cover shadow-2xl brightness-110"
                 />
