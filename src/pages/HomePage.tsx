@@ -330,7 +330,7 @@ export const HomePage: React.FC = () => {
           <section className="mt-20">
             <h3 className="text-2xl font-bold mb-8 flex items-center gap-3 text-text">
                <FileText className="text-primary" />
-               المصادر والمذكرات العامة
+               المصادر والاختبارات العامة
              </h3>
              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                {materials.map((item) => (
@@ -342,12 +342,12 @@ export const HomePage: React.FC = () => {
                    rel="noreferrer"
                    className="glass-card p-5 flex items-center gap-4 border border-border hover:border-primary/30 transition-all group shadow-sm"
                  >
-                   <div className={`p-3 rounded-xl ${item.type === 'pdf' ? 'bg-red-500/10 text-red-400' : 'bg-blue-500/10 text-blue-400'}`}>
-                     {item.type === 'pdf' ? <FileText size={20} /> : <LinkIcon size={20} />}
+                   <div className={`p-3 rounded-xl ${item.type === 'pdf' ? 'bg-red-500/10 text-red-400' : item.type === 'test' ? 'bg-green-500/10 text-green-400' : 'bg-blue-500/10 text-blue-400'}`}>
+                     {item.type === 'pdf' ? <FileText size={20} /> : item.type === 'test' ? <Activity size={20} /> : <LinkIcon size={20} />}
                    </div>
                    <div className="flex-1 min-w-0">
                      <h4 className="font-bold text-sm truncate group-hover:text-primary transition-colors text-text">{item.title}</h4>
-                     <p className="text-[10px] text-text/40 mt-1 font-bold">{item.type === 'pdf' ? 'ملف PDF' : 'رابط خارجي'}</p>
+                     <p className="text-[10px] text-text/40 mt-1 font-bold">{item.type === 'pdf' ? 'ملف PDF' : item.type === 'test' ? 'اختبار' : 'رابط خارجي'}</p>
                    </div>
                    <ChevronLeft size={16} className="text-text/20 group-hover:text-primary group-hover:translate-x-[-4px] transition-all" />
                  </motion.a>

@@ -698,7 +698,7 @@ const InputGroup: React.FC<{
 };
 
 const MaterialsView: React.FC<{ materials: any[]; onRefresh: () => void }> = ({ materials, onRefresh }) => {
-  const [formData, setFormData] = useState({ title: '', url: '', type: 'pdf' as 'pdf' | 'link' });
+  const [formData, setFormData] = useState({ title: '', url: '', type: 'pdf' as 'pdf' | 'link' | 'test' });
   const [uploading, setUploading] = useState(false);
 
   const handleSave = async () => {
@@ -745,7 +745,7 @@ const MaterialsView: React.FC<{ materials: any[]; onRefresh: () => void }> = ({ 
       <div className="glass-card p-8 max-w-3xl mx-auto shadow-xl border border-border">
         <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-text">
           <Plus className="text-primary" />
-          إضافة مصدر خارجي (PDF أو رابط)
+          إضافة مصدر خارجي (PDF، رابط، أو اختبار)
         </h2>
 
         <div className="space-y-6">
@@ -773,6 +773,12 @@ const MaterialsView: React.FC<{ materials: any[]; onRefresh: () => void }> = ({ 
             >
               رابط خارجي
             </button>
+            <button 
+              onClick={() => setFormData({...formData, type: 'test'})}
+              className={`flex-1 py-2 rounded-lg text-sm transition-all shadow-sm ${formData.type === 'test' ? 'bg-primary text-dark font-bold' : 'bg-text/5 text-text/60 border border-border/50'}`}
+            >
+              اختبار
+            </button>
           </div>
 
           {formData.type === 'pdf' ? (
@@ -785,10 +791,17 @@ const MaterialsView: React.FC<{ materials: any[]; onRefresh: () => void }> = ({ 
               isUploading={uploading}
               accept=".pdf"
             />
-          ) : (
+          ) : formData.type === 'link' ? (
             <InputGroup 
               label="الرابط" 
               icon={<LinkIcon size={18} />} 
+              value={formData.url} 
+              onChange={(v) => setFormData({...formData, url: v})}
+            />
+          ) : (
+            <InputGroup 
+              label="رابط الاختبار (Google Forms, Microsoft Forms...)" 
+              icon={<Activity size={18} />} 
               value={formData.url} 
               onChange={(v) => setFormData({...formData, url: v})}
             />
@@ -809,12 +822,12 @@ const MaterialsView: React.FC<{ materials: any[]; onRefresh: () => void }> = ({ 
             materials.map(item => (
               <div key={item.id} className="flex items-center justify-between p-4 bg-text/5 rounded-xl border border-border/50 hover:border-primary/50 transition-all group">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg shadow-inner ${item.type === 'pdf' ? 'bg-red-500/10 text-red-500' : 'bg-blue-500/10 text-blue-500'}`}>
-                    {item.type === 'pdf' ? <FileUp size={20} /> : <LinkIcon size={20} />}
+                  <div className={`p-2 rounded-lg shadow-inner ${item.type === 'pdf' ? 'bg-red-500/10 text-red-500' : item.type === 'test' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                    {item.type === 'pdf' ? <FileUp size={20} /> : item.type === 'test' ? <Activity size={20} /> : <LinkIcon size={20} />}
                   </div>
                   <div>
                     <h4 className="font-bold text-text group-hover:text-primary transition-colors">{item.title}</h4>
-                    <span className="text-[10px] text-text/40 font-bold uppercase tracking-wider">{item.type === 'pdf' ? 'ملف PDF' : 'رابط'}</span>
+                    <span className="text-[10px] text-text/40 font-bold uppercase tracking-wider">{item.type === 'pdf' ? 'ملف PDF' : item.type === 'test' ? 'اختبار' : 'رابط'}</span>
                   </div>
                 </div>
                 <div className="flex gap-2">
