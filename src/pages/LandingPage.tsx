@@ -66,16 +66,17 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen physics-bg transition-colors duration-500">
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-4 overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-100 transition-opacity duration-1000">
+      <section className="relative pt-32 pb-32 px-4 overflow-hidden min-h-[80vh] flex flex-col items-center justify-center">
+        <div className="absolute inset-0 z-0">
           <img 
             src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNjlmOTBkMmI1NGIwODE5MTg4NDU2YjU1NTQ3Mjg2ZmI6ZmlsZV8wMDAwMDAwMDgwNmM3MjQ2YmIxYzlmODJiOTFiZDAyMyIsInRzIjoiMjA1NzciLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6ImI5OTFkM2IwMjQ0ZDY4MWY5YjAyMzhkMjYwYTE2NzU2NjM2NjFjYmE4ZWYzNGM5YjQ2NmQ1OTdkN2Y3NzZkZTEiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJmbiI6bnVsbCwiY2QiOm51bGwsImNwIjpudWxsLCJtYSI6bnVsbH0=" 
             alt="Physics Learning" 
-            className="w-full h-full object-cover transition-all duration-1000"
+            className="w-full h-full object-cover opacity-100 transition-all duration-1000"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg/80 to-bg transition-colors duration-1000" />
+          <div className="absolute inset-0 bg-gradient-to-b from-bg/20 via-bg/40 to-bg transition-colors duration-1000" />
         </div>
-        <div className="max-w-7xl mx-auto text-center relative z-10">
+        
+        <div className="max-w-7xl mx-auto text-center relative z-10 w-full">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -90,32 +91,98 @@ export const LandingPage: React.FC = () => {
             {t('landing.badge')}
           </motion.div>
           
-          <motion.h1 
+
+
+          <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-5xl md:text-7xl font-black text-text mb-6 leading-tight tracking-tight drop-shadow-md"
+            transition={{ delay: 0.3 }}
+            className="flex flex-row flex-wrap justify-center gap-8 mb-16"
           >
-            {t('landing.title')} <span className="text-primary">{t('landing.titleHighlight')}</span>
-          </motion.h1>
-          
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-text/80 text-lg md:text-2xl max-w-3xl mx-auto mb-8 leading-relaxed font-bold drop-shadow-sm"
-          >
-            {t('landing.subtitle')}
-          </motion.p>
-          
-          {/* Supervisors Corner Widget */}
+            {supervisors.map((supervisor, i) => (
+              <motion.div
+                key={supervisor.id}
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 + (i * 0.1) }}
+                className="group relative flex flex-col items-center justify-center bg-bg/40 backdrop-blur-md rounded-full border border-primary/20 hover:border-primary/50 transition-all shadow-xl overflow-hidden w-24 h-24 md:w-32 md:h-32 cursor-pointer"
+              >
+                <img 
+                  src={supervisor.image_url} 
+                  alt={supervisor.name} 
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2 text-center">
+                  <span className="text-[10px] md:text-xs font-bold text-white leading-tight">{supervisor.name}</span>
+                </div>
+                {isTeacher && (
+                  <button
+                    onClick={(e) => handleDeleteSupervisor(supervisor.id, e)}
+                    className="absolute top-0 right-0 bg-red-500 text-white w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-bold text-sm shadow-lg z-30"
+                  >
+                    &times;
+                  </button>
+                )}
+              </motion.div>
+            ))}
+          </motion.div>
+
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="flex flex-col items-center gap-4 max-w-full px-4 mb-12 w-max mx-auto"
+            className="flex flex-col gap-10 items-center w-full px-4"
           >
-            {isTeacher && (
+            <div className="glass-card px-8 md:px-12 py-6 md:py-8 border-primary/20 bg-white/5 backdrop-blur-xl shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] max-w-5xl mx-auto relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+              <p className="relative z-10 text-text/90 text-xl md:text-4xl leading-relaxed font-black drop-shadow-2xl tracking-tight">
+                {t('landing.subtitle')}
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center w-full">
+              {user ? (
+                <div className="flex flex-col items-center gap-6">
+                  <div className="glass-card px-8 py-4 border-primary/20 shadow-xl bg-bg/40 backdrop-blur-md">
+                    <h2 className="text-2xl md:text-3xl font-bold text-text">
+                      {t('landing.welcomeBack', 'أهلاً بك مجدداً،')} <span className="text-primary">{user.full_name?.split(' ')[0] || t('landing.student', 'طالبنا العزيز')}</span>
+                    </h2>
+                  </div>
+                  <Link to={isTeacher ? "/admin" : "/home"} className="btn-primary px-12 py-5 text-xl flex items-center gap-3 group shadow-2xl shadow-primary/40">
+                    {isTeacher ? t('landing.continueDashboard', 'متابعة لوحة التحكم') : t('landing.continueLearning', 'متابعة التعلم')}
+                    <ChevronLeft size={24} className="group-hover:-translate-x-1 transition-transform rtl:rotate-0 ltr:rotate-180" />
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-6">
+                  <Link to="/signup" className="btn-primary px-12 py-5 text-xl flex items-center gap-3 group shadow-2xl shadow-primary/40">
+                    {t('landing.startJourney', 'ابدأ رحلتك الآن')}
+                    <ChevronLeft size={24} className="group-hover:-translate-x-1 transition-transform rtl:rotate-0 ltr:rotate-180" />
+                  </Link>
+                  <Link to="/login" className="glass-card bg-bg/40 backdrop-blur-md hover:bg-card/60 text-text px-12 py-5 font-bold transition-all text-xl flex justify-center items-center border-border/50">
+                    {t('landing.loginToContinue', 'تسجيل الدخول')}
+                  </Link>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Abstract shapes */}
+        <div className="absolute top-1/4 left-0 w-64 h-64 bg-primary/20 rounded-full blur-[120px] -z-10 animate-pulse" />
+        <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[150px] -z-10" />
+      </section>
+
+      {/* Supervisors Corner Section (Form Only) */}
+      <section className="py-12 bg-bg/80 relative z-20">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          {isTeacher && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex flex-col items-center gap-6"
+            >
               <div className="bg-bg/90 backdrop-blur-md p-6 border border-primary/20 rounded-2xl shadow-xl max-w-xs w-[300px]">
                 <h3 className="text-lg font-bold mb-4 text-text">{t('landing.addSupervisor', 'إضافة مشرف')}</h3>
                 <form onSubmit={handleAddSupervisor} className="space-y-3">
@@ -168,79 +235,9 @@ export const LandingPage: React.FC = () => {
                   </button>
                 </form>
               </div>
-            )}
-
-            <div className="flex flex-row flex-wrap justify-center gap-6">
-              {supervisors.map((supervisor, i) => (
-                <motion.div
-                  key={supervisor.id}
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="group relative flex flex-col items-center justify-center bg-bg/80 backdrop-blur-sm rounded-3xl border border-border/50 hover:border-primary/50 hover:bg-bg transition-all shadow-xl overflow-hidden w-48 h-48 cursor-pointer"
-                >
-                  <img 
-                    src={supervisor.image_url} 
-                    alt={supervisor.name} 
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/90 via-black/80 to-transparent flex flex-col justify-end min-h-[50%] group-hover:min-h-full transition-all duration-300">
-                    <h3 className="text-base font-bold text-white text-center drop-shadow-md leading-tight mb-2">{supervisor.name}</h3>
-                    {supervisor.bio && (
-                      <p className="text-white/80 text-xs text-center leading-relaxed h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-300 line-clamp-4">
-                        {supervisor.bio}
-                      </p>
-                    )}
-                  </div>
-                  {isTeacher && (
-                    <button
-                      onClick={(e) => handleDeleteSupervisor(supervisor.id, e)}
-                      className="absolute top-2 right-2 bg-red-500 text-white w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-bold text-lg shadow-lg z-30"
-                      title={t('landing.delete', 'حذف')}
-                    >
-                      &times;
-                    </button>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-          
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="flex flex-col gap-6 justify-center items-center"
-          >
-            {user ? (
-              <div className="flex flex-col items-center gap-6">
-                <div className="glass-card px-8 py-4 border-primary/20 shadow-lg">
-                  <h2 className="text-2xl md:text-3xl font-bold text-text">
-                    {t('landing.welcomeBack', 'أهلاً بك مجدداً،')} <span className="text-primary">{user.full_name?.split(' ')[0] || t('landing.student', 'طالبنا العزيز')}</span>
-                  </h2>
-                </div>
-                <Link to={isTeacher ? "/admin" : "/home"} className="btn-primary px-10 py-4 text-lg flex items-center gap-2 group shadow-lg shadow-primary/20">
-                  {isTeacher ? t('landing.continueDashboard', 'متابعة لوحة التحكم') : t('landing.continueLearning', 'متابعة التعلم')}
-                  <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform rtl:rotate-0 ltr:rotate-180" />
-                </Link>
-              </div>
-            ) : (
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/signup" className="btn-primary px-10 py-4 text-lg flex items-center gap-2 group shadow-lg shadow-primary/20">
-                  {t('landing.startJourney', 'ابدأ رحلتك الآن')}
-                  <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform rtl:rotate-0 ltr:rotate-180" />
-                </Link>
-                <Link to="/login" className="glass-card hover:bg-card/50 text-text px-10 py-4 font-bold transition-all text-lg flex justify-center items-center">
-                  {t('landing.loginToContinue', 'تسجيل الدخول')}
-                </Link>
-              </div>
-            )}
-          </motion.div>
+            </motion.div>
+          )}
         </div>
-
-        {/* Abstract shapes */}
-        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-64 h-64 bg-primary/20 rounded-full blur-[120px] -z-10 animate-pulse" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[150px] -z-10" />
       </section>
 
       {/* Physics Bio Section */}
