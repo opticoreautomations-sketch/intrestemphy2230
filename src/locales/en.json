@@ -13,9 +13,9 @@
   },
   "landing": {
     "badge": "Physics World Educational Platform",
-    "title": "Welcome to",
-    "titleHighlight": "Physics World",
-    "subtitle": "Welcome to your educational platform. Explore, interact, and understand physics in a fun and engaging way!",
+    "title": "Welcome",
+    "titleHighlight": "my students",
+    "subtitle": "Welcome my students",
     "addSupervisor": "Add Supervisor",
     "supervisorName": "Supervisor Name",
     "uploadImage": "Upload image from device",
