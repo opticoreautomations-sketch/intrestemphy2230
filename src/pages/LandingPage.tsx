@@ -160,27 +160,27 @@ export const LandingPage: React.FC = () => {
               </div>
             )}
 
-            <div className="flex flex-row flex-wrap justify-center gap-4">
+            <div className="flex flex-row flex-wrap justify-center gap-6">
               {supervisors.map((supervisor, i) => (
                 <motion.div
                   key={supervisor.id}
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="group relative flex items-center gap-3 bg-bg/80 backdrop-blur-sm p-2 pr-4 rounded-full border border-border/50 hover:border-primary/50 hover:bg-bg transition-all shadow-lg cursor-pointer max-w-[200px]"
+                  className="group relative flex flex-col items-center justify-center bg-bg/80 backdrop-blur-sm rounded-3xl border border-border/50 hover:border-primary/50 hover:bg-bg transition-all shadow-xl overflow-hidden w-48 h-48 cursor-pointer"
                 >
-                  <h3 className="text-sm font-bold text-text/80 group-hover:text-primary transition-colors whitespace-nowrap overflow-hidden text-ellipsis">{supervisor.name}</h3>
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors shrink-0">
-                    <img 
-                      src={supervisor.image_url} 
-                      alt={supervisor.name} 
-                      className="w-full h-full object-cover"
-                    />
+                  <img 
+                    src={supervisor.image_url} 
+                    alt={supervisor.name} 
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
+                    <h3 className="text-base font-bold text-white text-center whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-md">{supervisor.name}</h3>
                   </div>
                   {isTeacher && (
                     <button
                       onClick={(e) => handleDeleteSupervisor(supervisor.id, e)}
-                      className="absolute -top-1 -right-1 bg-red-500 text-white w-5 h-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-bold text-xs shadow-lg z-30"
+                      className="absolute top-2 right-2 bg-red-500 text-white w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-bold text-lg shadow-lg z-30"
                       title="حذف"
                     >
                       &times;
