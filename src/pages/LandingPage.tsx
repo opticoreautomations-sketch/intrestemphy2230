@@ -9,7 +9,7 @@ import { api } from '../lib/api';
 export const LandingPage: React.FC = () => {
   const { user, isTeacher } = useAuth();
   const [supervisors, setSupervisors] = useState<any[]>([]);
-  const [formData, setFormData] = useState({ name: '', image_url: '' });
+  const [formData, setFormData] = useState({ name: '', image_url: '', bio: '' });
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,7 +42,7 @@ export const LandingPage: React.FC = () => {
     try {
       await api.supervisors.create(formData);
       toast.success('تمت إضافة المشرف بنجاح');
-      setFormData({ name: '', image_url: '' });
+      setFormData({ name: '', image_url: '', bio: '' });
       fetchSupervisors();
     } catch (error: any) {
       toast.error(error.message || 'فشل إضافة المشرف');
@@ -153,6 +153,14 @@ export const LandingPage: React.FC = () => {
                       <Upload size={16} className={uploading ? 'animate-bounce' : ''} />
                     </button>
                   </div>
+                  <div>
+                    <textarea
+                      value={formData.bio}
+                      onChange={e => setFormData({ ...formData, bio: e.target.value })}
+                      className="w-full bg-bg border border-border/50 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary transition-all min-h-[60px]"
+                      placeholder="نبذة عن المشرف"
+                    />
+                  </div>
                   <button type="submit" className="w-full bg-primary text-dark font-bold py-2 text-xs rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
                     إضافة
                   </button>
@@ -174,8 +182,13 @@ export const LandingPage: React.FC = () => {
                     alt={supervisor.name} 
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
-                    <h3 className="text-base font-bold text-white text-center whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-md">{supervisor.name}</h3>
+                  <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/90 via-black/80 to-transparent flex flex-col justify-end min-h-[50%] group-hover:min-h-full transition-all duration-300">
+                    <h3 className="text-base font-bold text-white text-center drop-shadow-md leading-tight mb-2">{supervisor.name}</h3>
+                    {supervisor.bio && (
+                      <p className="text-white/80 text-xs text-center leading-relaxed h-0 opacity-0 group-hover:h-auto group-hover:opacity-100 transition-all duration-300 line-clamp-4">
+                        {supervisor.bio}
+                      </p>
+                    )}
                   </div>
                   {isTeacher && (
                     <button

@@ -127,6 +127,10 @@ try {
   db.prepare("ALTER TABLE profiles ADD COLUMN access_close INTEGER DEFAULT 0").run();
 } catch (e) {}
 
+try {
+  db.prepare("ALTER TABLE supervisors ADD COLUMN bio TEXT").run();
+} catch (e) {}
+
 // Default Admin (Teacher)
 const adminPassword = bcrypt.hashSync("admin123", 10);
 db.prepare(`
@@ -440,12 +444,12 @@ app.get("/api/supervisors", (req, res) => {
 // Admin: Add Supervisor
 app.post("/api/admin/supervisors", authenticate, (req: any, res) => {
   if (req.user.role !== "teacher") return res.status(403).json({ error: "Forbidden" });
-  const { name, image_url } = req.body;
+  const { name, image_url, bio } = req.body;
   
   if (!name || !image_url) return res.status(400).json({ error: "Missing fields" });
   
   try {
-    const result = db.prepare("INSERT INTO supervisors (name, image_url) VALUES (?, ?)").run(name, image_url);
+    const result = db.prepare("INSERT INTO supervisors (name, image_url, bio) VALUES (?, ?, ?)").run(name, image_url, bio || '');
     res.json({ id: result.lastInsertRowid, message: "Supervisor created" });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

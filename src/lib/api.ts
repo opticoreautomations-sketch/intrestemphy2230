@@ -137,7 +137,7 @@ export const api = {
     async getAll() {
       return api.fetch("/supervisors");
     },
-    async create(data: { name: string; image_url: string }) {
+    async create(data: { name: string; image_url: string; bio?: string }) {
       return api.fetch("/admin/supervisors", {
         method: "POST",
         body: JSON.stringify(data),

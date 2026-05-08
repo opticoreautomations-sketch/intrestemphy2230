@@ -1015,7 +1015,7 @@ const StudentsView: React.FC<{ students: any[]; onDelete: (id: string) => void; 
 };
 
 const SupervisorsView: React.FC<{ supervisors: any[]; onRefresh: () => void }> = ({ supervisors, onRefresh }) => {
-  const [formData, setFormData] = useState({ name: '', image_url: '' });
+  const [formData, setFormData] = useState({ name: '', image_url: '', bio: '' });
   const [uploading, setUploading] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -1039,7 +1039,7 @@ const SupervisorsView: React.FC<{ supervisors: any[]; onRefresh: () => void }> =
     try {
       await api.supervisors.create(formData);
       toast.success('تمت إضافة المشرف بنجاح');
-      setFormData({ name: '', image_url: '' });
+      setFormData({ name: '', image_url: '', bio: '' });
       onRefresh();
     } catch (error) {
       toast.error('فشل إضافة المشرف');
@@ -1102,6 +1102,15 @@ const SupervisorsView: React.FC<{ supervisors: any[]; onRefresh: () => void }> =
               </div>
             </div>
           </div>
+          <div>
+            <label className="block text-sm font-bold text-text/80 mb-2">نبذة عن المشرف (Bio)</label>
+            <textarea
+              value={formData.bio}
+              onChange={e => setFormData({ ...formData, bio: e.target.value })}
+              className="w-full bg-bg border border-border/50 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary transition-all text-right min-h-[100px]"
+              placeholder="اكتب نبذة مختصرة هنا..."
+            />
+          </div>
           <button type="submit" className="px-6 py-2 bg-primary text-dark font-bold rounded-xl shadow-lg hover:shadow-primary/20 hover:-translate-y-1 transition-all">
             إضافة مشرف
           </button>
@@ -1111,13 +1120,14 @@ const SupervisorsView: React.FC<{ supervisors: any[]; onRefresh: () => void }> =
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {supervisors.map(sup => (
           <div key={sup.id} className="glass-card p-4 border border-border flex flex-col items-center">
-            <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-primary/20">
+            <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-primary/20 shrink-0">
               <img src={sup.image_url} alt={sup.name} className="w-full h-full object-cover" />
             </div>
-            <h4 className="font-bold text-text mb-4 text-center">{sup.name}</h4>
+            <h4 className="font-bold text-text mb-2 text-center">{sup.name}</h4>
+            {sup.bio && <p className="text-sm text-text/60 text-center mb-4 line-clamp-3">{sup.bio}</p>}
             <button 
               onClick={() => handleDelete(sup.id)}
-              className="px-4 py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all text-sm font-bold"
+              className="mt-auto px-4 py-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all text-sm font-bold w-full"
             >
               حذف
             </button>
