@@ -24,7 +24,8 @@ import {
   ShieldCheck,
   ShieldAlert,
   Search,
-  Filter
+  Filter,
+  Upload
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { toast } from 'react-hot-toast';
@@ -1015,6 +1016,23 @@ const StudentsView: React.FC<{ students: any[]; onDelete: (id: string) => void; 
 
 const SupervisorsView: React.FC<{ supervisors: any[]; onRefresh: () => void }> = ({ supervisors, onRefresh }) => {
   const [formData, setFormData] = useState({ name: '', image_url: '' });
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { url } = await api.admin.upload(file);
+      setFormData(prev => ({ ...prev, image_url: url }));
+      toast.success('تم رفع الصورة بنجاح');
+    } catch (error) {
+      toast.error('فشل رفع الصورة');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1057,13 +1075,31 @@ const SupervisorsView: React.FC<{ supervisors: any[]; onRefresh: () => void }> =
             </div>
             <div>
               <label className="block text-sm font-bold text-text/80 mb-2">رابط صورة المشرف (URL)</label>
-              <input 
-                type="text" 
-                required
-                value={formData.image_url}
-                onChange={e => setFormData({ ...formData, image_url: e.target.value })}
-                className="w-full bg-bg border border-border/50 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary transition-all text-right"
-              />
+              <div className="flex items-center gap-2">
+                <input 
+                  type="text" 
+                  value={formData.image_url}
+                  onChange={e => setFormData({ ...formData, image_url: e.target.value })}
+                  className="w-full bg-bg border border-border/50 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary transition-all text-left"
+                  dir="ltr"
+                />
+                <input 
+                  type="file" 
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleFileUpload}
+                  accept="image/*"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="bg-primary/10 text-primary p-2 py-2 rounded-xl border border-primary/20 hover:bg-primary/20 transition-all shrink-0"
+                  title="رفع صورة من الجهاز"
+                >
+                  <Upload size={18} className={uploading ? 'animate-bounce' : ''} />
+                </button>
+              </div>
             </div>
           </div>
           <button type="submit" className="px-6 py-2 bg-primary text-dark font-bold rounded-xl shadow-lg hover:shadow-primary/20 hover:-translate-y-1 transition-all">

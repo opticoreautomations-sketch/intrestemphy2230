@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
-import { Atom, Zap, Globe, Target, ChevronLeft, ArrowRight, Video, GraduationCap, FileText } from 'lucide-react';
+import { Atom, Zap, Globe, Target, ChevronLeft, ArrowRight, Video, GraduationCap, FileText, Upload } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 
@@ -10,6 +10,8 @@ export const LandingPage: React.FC = () => {
   const { user, isTeacher } = useAuth();
   const [supervisors, setSupervisors] = useState<any[]>([]);
   const [formData, setFormData] = useState({ name: '', image_url: '' });
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchSupervisors = () => {
     api.supervisors.getAll().then(setSupervisors).catch(console.error);
@@ -18,6 +20,21 @@ export const LandingPage: React.FC = () => {
   useEffect(() => {
     fetchSupervisors();
   }, []);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { url } = await api.admin.upload(file);
+      setFormData(prev => ({ ...prev, image_url: url }));
+      toast.success('تم رفع الصورة بنجاح');
+    } catch (error) {
+      toast.error('فشل رفع الصورة');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleAddSupervisor = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,10 +101,95 @@ export const LandingPage: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-text/80 text-lg md:text-2xl max-w-3xl mx-auto mb-12 leading-relaxed font-bold drop-shadow-sm"
+            className="text-text/80 text-lg md:text-2xl max-w-3xl mx-auto mb-8 leading-relaxed font-bold drop-shadow-sm"
           >
             أهلاً وسهلاً بكم في منصتكم التعليمية. استكشف، تفاعل، وافهم الفيزياء بأسلوب ممتع وشيق!
           </motion.p>
+          
+          {/* Supervisors Corner Widget */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex flex-col items-center gap-4 max-w-full px-4 mb-12 w-max mx-auto"
+          >
+            {isTeacher && (
+              <div className="bg-bg/90 backdrop-blur-md p-6 border border-primary/20 rounded-2xl shadow-xl max-w-xs w-[300px]">
+                <h3 className="text-lg font-bold mb-4 text-text">إضافة مشرف</h3>
+                <form onSubmit={handleAddSupervisor} className="space-y-3">
+                  <div>
+                    <input 
+                      type="text" 
+                      required
+                      value={formData.name}
+                      onChange={e => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full bg-bg border border-border/50 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary transition-all"
+                      placeholder="اسم المشرف"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="url" 
+                      value={formData.image_url}
+                      onChange={e => setFormData({ ...formData, image_url: e.target.value })}
+                      className="flex-1 bg-bg border border-border/50 rounded-xl px-3 py-2 text-xs min-w-0 focus:outline-none focus:border-primary transition-all text-left"
+                      placeholder="رابط الصورة"
+                      dir="ltr"
+                    />
+                    <input 
+                      type="file" 
+                      ref={fileInputRef}
+                      className="hidden"
+                      onChange={handleFileUpload}
+                      accept="image/*"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="bg-primary/10 text-primary p-2 rounded-xl border border-primary/20 hover:bg-primary/20 transition-all shrink-0"
+                      title="رفع صورة من الجهاز"
+                    >
+                      <Upload size={16} className={uploading ? 'animate-bounce' : ''} />
+                    </button>
+                  </div>
+                  <button type="submit" className="w-full bg-primary text-dark font-bold py-2 text-xs rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
+                    إضافة
+                  </button>
+                </form>
+              </div>
+            )}
+
+            <div className="flex flex-row flex-wrap justify-center gap-4">
+              {supervisors.map((supervisor, i) => (
+                <motion.div
+                  key={supervisor.id}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="group relative flex items-center gap-3 bg-bg/80 backdrop-blur-sm p-2 pr-4 rounded-full border border-border/50 hover:border-primary/50 hover:bg-bg transition-all shadow-lg cursor-pointer max-w-[200px]"
+                >
+                  <h3 className="text-sm font-bold text-text/80 group-hover:text-primary transition-colors whitespace-nowrap overflow-hidden text-ellipsis">{supervisor.name}</h3>
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary/20 group-hover:border-primary transition-colors shrink-0">
+                    <img 
+                      src={supervisor.image_url} 
+                      alt={supervisor.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  {isTeacher && (
+                    <button
+                      onClick={(e) => handleDeleteSupervisor(supervisor.id, e)}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white w-5 h-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-bold text-xs shadow-lg z-30"
+                      title="حذف"
+                    >
+                      &times;
+                    </button>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
           
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -246,89 +348,6 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </section>
-
-      {/* Supervisors Section */}
-      <section className="py-24 px-4 bg-bg relative overflow-hidden transition-colors duration-500">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-text">المشرفون وصناع المحتوى</h2>
-            <p className="text-text/40 max-w-xl mx-auto font-medium">فريق من الخبراء لدعم رحلتك التعليمية</p>
-          </div>
-
-          {isTeacher && (
-              <div className="mb-16 glass-card p-8 border border-border max-w-2xl mx-auto relative z-20">
-                <h3 className="text-2xl font-bold mb-6 text-text">إضافة مشرف جديد</h3>
-                <form onSubmit={handleAddSupervisor} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-right">
-                    <div>
-                      <label className="block text-sm font-bold text-text/80 mb-2">اسم المشرف</label>
-                      <input 
-                        type="text" 
-                        required
-                        value={formData.name}
-                        onChange={e => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full bg-bg border border-border/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-all"
-                        placeholder="أدخل اسم المشرف"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-text/80 mb-2">رابط الصورة</label>
-                      <input 
-                        type="url" 
-                        required
-                        value={formData.image_url}
-                        onChange={e => setFormData({ ...formData, image_url: e.target.value })}
-                        className="w-full bg-bg border border-border/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-all text-left"
-                        placeholder="https://example.com/image.jpg"
-                        dir="ltr"
-                      />
-                    </div>
-                  </div>
-                  <button type="submit" className="w-full mt-4 bg-primary text-dark font-bold py-3 rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
-                    إضافة المشرف
-                  </button>
-                </form>
-              </div>
-            )}
-
-            <div className="flex flex-wrap justify-center gap-12 relative z-10">
-              {supervisors.map((supervisor, i) => (
-                <motion.div
-                  key={supervisor.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="flex flex-col items-center group relative cursor-pointer"
-                >
-                  <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-bg shadow-xl mb-6 relative group-hover:border-primary transition-colors duration-300">
-                    <img 
-                      src={supervisor.image_url} 
-                      alt={supervisor.name} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </div>
-                  <h3 className="text-xl font-bold text-text group-hover:text-primary transition-colors">{supervisor.name}</h3>
-                  {isTeacher && (
-                    <button
-                      onClick={(e) => handleDeleteSupervisor(supervisor.id, e)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-bold text-lg shadow-lg z-30 hover:scale-110"
-                      title="حذف المشرف"
-                    >
-                      &times;
-                    </button>
-                  )}
-                </motion.div>
-              ))}
-              {supervisors.length === 0 && !isTeacher && (
-                <div className="col-span-full py-12 text-center text-text/40 font-bold italic">
-                  لا يوجد مشرفين حالياً
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
 
       {/* Footer */}
       <footer className="py-12 border-t border-border px-4 text-center bg-bg transition-colors duration-500">
