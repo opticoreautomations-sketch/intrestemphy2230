@@ -4,10 +4,12 @@ import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import { Atom, Zap, Globe, Target, ChevronLeft, ArrowRight, Video, GraduationCap, FileText, Upload } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 
 export const LandingPage: React.FC = () => {
   const { user, isTeacher } = useAuth();
+  const { t } = useTranslation();
   const [supervisors, setSupervisors] = useState<any[]>([]);
   const [formData, setFormData] = useState({ name: '', image_url: '', bio: '' });
   const [uploading, setUploading] = useState(false);
@@ -85,7 +87,7 @@ export const LandingPage: React.FC = () => {
               alt="Logo" 
               className="w-8 h-8 rounded-full"
             />
-            منصة عالم الفيزياء التعليمية
+            {t('landing.badge')}
           </motion.div>
           
           <motion.h1 
@@ -94,7 +96,7 @@ export const LandingPage: React.FC = () => {
             transition={{ delay: 0.2 }}
             className="text-5xl md:text-7xl font-black text-text mb-6 leading-tight tracking-tight drop-shadow-md"
           >
-            مرحباً بكم في <span className="text-primary">عالم الفيزياء</span>
+            {t('landing.title')} <span className="text-primary">{t('landing.titleHighlight')}</span>
           </motion.h1>
           
           <motion.p 
@@ -103,7 +105,7 @@ export const LandingPage: React.FC = () => {
             transition={{ delay: 0.4 }}
             className="text-text/80 text-lg md:text-2xl max-w-3xl mx-auto mb-8 leading-relaxed font-bold drop-shadow-sm"
           >
-            أهلاً وسهلاً بكم في منصتكم التعليمية. استكشف، تفاعل، وافهم الفيزياء بأسلوب ممتع وشيق!
+            {t('landing.subtitle')}
           </motion.p>
           
           {/* Supervisors Corner Widget */}
@@ -115,7 +117,7 @@ export const LandingPage: React.FC = () => {
           >
             {isTeacher && (
               <div className="bg-bg/90 backdrop-blur-md p-6 border border-primary/20 rounded-2xl shadow-xl max-w-xs w-[300px]">
-                <h3 className="text-lg font-bold mb-4 text-text">إضافة مشرف</h3>
+                <h3 className="text-lg font-bold mb-4 text-text">{t('landing.addSupervisor', 'إضافة مشرف')}</h3>
                 <form onSubmit={handleAddSupervisor} className="space-y-3">
                   <div>
                     <input 
@@ -124,7 +126,7 @@ export const LandingPage: React.FC = () => {
                       value={formData.name}
                       onChange={e => setFormData({ ...formData, name: e.target.value })}
                       className="w-full bg-bg border border-border/50 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary transition-all"
-                      placeholder="اسم المشرف"
+                      placeholder={t('landing.supervisorName', 'اسم المشرف')}
                     />
                   </div>
                   <div className="flex items-center gap-2">
@@ -148,7 +150,7 @@ export const LandingPage: React.FC = () => {
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
                       className="bg-primary/10 text-primary p-2 rounded-xl border border-primary/20 hover:bg-primary/20 transition-all shrink-0"
-                      title="رفع صورة من الجهاز"
+                      title={t('landing.uploadImage', 'رفع صورة من الجهاز')}
                     >
                       <Upload size={16} className={uploading ? 'animate-bounce' : ''} />
                     </button>
@@ -158,11 +160,11 @@ export const LandingPage: React.FC = () => {
                       value={formData.bio}
                       onChange={e => setFormData({ ...formData, bio: e.target.value })}
                       className="w-full bg-bg border border-border/50 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary transition-all min-h-[60px]"
-                      placeholder="نبذة عن المشرف"
+                      placeholder={t('landing.supervisorBio', 'نبذة عن المشرف')}
                     />
                   </div>
                   <button type="submit" className="w-full bg-primary text-dark font-bold py-2 text-xs rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
-                    إضافة
+                    {t('landing.add', 'إضافة')}
                   </button>
                 </form>
               </div>
@@ -194,7 +196,7 @@ export const LandingPage: React.FC = () => {
                     <button
                       onClick={(e) => handleDeleteSupervisor(supervisor.id, e)}
                       className="absolute top-2 right-2 bg-red-500 text-white w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center font-bold text-lg shadow-lg z-30"
-                      title="حذف"
+                      title={t('landing.delete', 'حذف')}
                     >
                       &times;
                     </button>
@@ -214,22 +216,22 @@ export const LandingPage: React.FC = () => {
               <div className="flex flex-col items-center gap-6">
                 <div className="glass-card px-8 py-4 border-primary/20 shadow-lg">
                   <h2 className="text-2xl md:text-3xl font-bold text-text">
-                    أهلاً بك مجدداً، <span className="text-primary">{user.full_name?.split(' ')[0] || 'طالبنا العزيز'}</span>
+                    {t('landing.welcomeBack', 'أهلاً بك مجدداً،')} <span className="text-primary">{user.full_name?.split(' ')[0] || t('landing.student', 'طالبنا العزيز')}</span>
                   </h2>
                 </div>
                 <Link to={isTeacher ? "/admin" : "/home"} className="btn-primary px-10 py-4 text-lg flex items-center gap-2 group shadow-lg shadow-primary/20">
-                  متابعة {isTeacher ? "لوحة التحكم" : "التعلم"}
-                  <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                  {isTeacher ? t('landing.continueDashboard', 'متابعة لوحة التحكم') : t('landing.continueLearning', 'متابعة التعلم')}
+                  <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform rtl:rotate-0 ltr:rotate-180" />
                 </Link>
               </div>
             ) : (
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link to="/signup" className="btn-primary px-10 py-4 text-lg flex items-center gap-2 group shadow-lg shadow-primary/20">
-                  ابدأ رحلتك الآن
-                  <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                  {t('landing.startJourney', 'ابدأ رحلتك الآن')}
+                  <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform rtl:rotate-0 ltr:rotate-180" />
                 </Link>
                 <Link to="/login" className="glass-card hover:bg-card/50 text-text px-10 py-4 font-bold transition-all text-lg flex justify-center items-center">
-                  تسجيل الدخول
+                  {t('landing.loginToContinue', 'تسجيل الدخول')}
                 </Link>
               </div>
             )}
@@ -253,17 +255,17 @@ export const LandingPage: React.FC = () => {
               className="space-y-8"
             >
               <div className="inline-block px-3 py-1 bg-primary/20 text-primary text-xs font-bold tracking-widest uppercase rounded-md">
-                الرسالة العلمية
+                {t('landing.missionBadge', 'الرسالة العلمية')}
               </div>
               <h2 className="text-3xl md:text-5xl font-bold text-text leading-tight">
-                الفيزياء: رحلة في أعماق <span className="text-primary italic">الحقيقة</span>
+                {t('landing.missionTitle', 'الفيزياء: رحلة في أعماق')} <span className="text-primary italic">{t('landing.missionTitleHighlight', 'الحقيقة')}</span>
               </h2>
               <div className="space-y-6 text-text/70 text-lg leading-relaxed">
                 <p>
-                  الفيزياء هي العلم الذي يربط بين الخيال والواقع؛ هي المحاولة البشرية المستمرة لفهم كيف يتحرك الإلكترون حول النواة وكيف تتصادم المجرات في أقاصي الكون.
+                  {t('landing.missionDesc1', 'الفيزياء هي العلم الذي يربط بين الخيال والواقع؛ هي المحاولة البشرية المستمرة لفهم كيف يتحرك الإلكترون حول النواة وكيف تتصادم المجرات في أقاصي الكون.')}
                 </p>
                 <p>
-                  في "عالم الفيزياء"، نسعى لتحويل المعادلات الجافة إلى تجارب بصرية نابضة بالحياة. نؤمن أن الفهم الحقيقي يبدأ عندما نرى العلم وليس فقط عندما نسمع عنه. انضم إلينا لتكتشف القوى التي تحرك حياتك وتصيغ مستقبلك.
+                  {t('landing.missionDesc2')}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
                   <div className="flex gap-4 items-start p-4 rounded-2xl bg-card border border-border hover:border-primary/20 transition-all group shadow-sm">
@@ -271,8 +273,8 @@ export const LandingPage: React.FC = () => {
                       <Zap size={24} />
                     </div>
                     <div>
-                      <h4 className="font-bold text-text mb-1">الديناميكا</h4>
-                      <p className="text-sm text-text/40">دراسة الحركة والقوى والمسببات الأساسية للتفاعل.</p>
+                      <h4 className="font-bold text-text mb-1">{t('landing.missionCard1Title', 'الديناميكا')}</h4>
+                      <p className="text-sm text-text/40">{t('landing.missionCard1Desc', 'دراسة الحركة والقوى والمسببات الأساسية للتفاعل.')}</p>
                     </div>
                   </div>
                   <div className="flex gap-4 items-start p-4 rounded-2xl bg-card border border-border hover:border-primary/20 transition-all group shadow-sm">
@@ -280,8 +282,8 @@ export const LandingPage: React.FC = () => {
                       <Atom size={24} />
                     </div>
                     <div>
-                      <h4 className="font-bold text-text mb-1">ميكانيكا الكم</h4>
-                      <p className="text-sm text-text/40">استكشاف العالم المجهري وأسرار الجزيئات تحت الذرية.</p>
+                      <h4 className="font-bold text-text mb-1">{t('landing.missionCard2Title', 'ميكانيكا الكم')}</h4>
+                      <p className="text-sm text-text/40">{t('landing.missionCard2Desc')}</p>
                     </div>
                   </div>
                 </div>
@@ -308,7 +310,7 @@ export const LandingPage: React.FC = () => {
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-text">100%</div>
-                    <div className="text-xs text-text/40 font-bold uppercase tracking-wider">تركيز على الفهم العميق</div>
+                    <div className="text-xs text-text/40 font-bold uppercase tracking-wider">{t('landing.focusBadge')}</div>
                   </div>
                 </div>
               </div>
@@ -321,26 +323,26 @@ export const LandingPage: React.FC = () => {
       <section className="py-24 px-4 bg-bg/50 transition-colors duration-500">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-text">ماذا تقدم لك المنصة؟</h2>
-            <p className="text-text/40 max-w-xl mx-auto font-medium">نحن ندمج التكنولوجيا مع العلم لنقدم تجربة تعليمية لا تُنسى.</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-text">{t('landing.featuresTitle')}</h2>
+            <p className="text-text/40 max-w-xl mx-auto font-medium">{t('landing.featuresSubtitle')}</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { 
                 icon: <Video />, 
-                title: 'شروحات مرئية', 
-                desc: 'دروس فيديو تفاعلية تشرح أصعب التجارب والمفاهيم بأسلوب مبسط وممتع.' 
+                title: t('landing.feature1Title', 'شروحات مرئية'), 
+                desc: t('landing.feature1Desc', 'دروس فيديو تفاعلية تشرح أصعب التجارب والمفاهيم بأسلوب مبسط وممتع.') 
               },
               { 
                 icon: <FileText />, 
-                title: 'مذكرات شاملة', 
-                desc: 'مستندات PDF تلخص المحتوى وتوفر تمارين تدريبية لتعزيز الفهم.' 
+                title: t('landing.feature2Title', 'مذكرات شاملة'), 
+                desc: t('landing.feature2Desc', 'مستندات PDF تلخص المحتوى وتوفر تمارين تدريبية لتعزيز الفهم.') 
               },
               { 
                 icon: <GraduationCap />, 
-                title: 'اختبارات تقييمية', 
-                desc: 'قياس مستواك باستمرار من خلال اختبارات ذكية بعد كل درس.' 
+                title: t('landing.feature3Title', 'اختبارات تقييمية'), 
+                desc: t('landing.feature3Desc', 'قياس مستواك باستمرار من خلال اختبارات ذكية بعد كل درس.') 
               }
             ].map((feature, i) => (
               <motion.div
@@ -370,13 +372,13 @@ export const LandingPage: React.FC = () => {
             alt="Logo" 
             className="w-10 h-10 rounded-full"
           />
-          <span>عالم الفيزياء</span>
+          <span>{t('landing.titleHighlight')}</span>
         </div>
-        <p className="text-text/20 text-sm font-medium mb-4">© 2026 جميع الحقوق محفوظة لمنصة عالم الفيزياء التعليمية</p>
+        <p className="text-text/20 text-sm font-medium mb-4">{t('landing.copyright')}</p>
         <div className="flex justify-center gap-6">
-          <Link to="/contact" className="text-sm font-bold text-text/40 hover:text-primary transition-colors">تواصل معنا</Link>
-          <a href="#" className="text-sm font-bold text-text/40 hover:text-primary transition-colors">سياسة الخصوصية</a>
-          <a href="#" className="text-sm font-bold text-text/40 hover:text-primary transition-colors">الشروط والأحكام</a>
+          <Link to="/contact" className="text-sm font-bold text-text/40 hover:text-primary transition-colors">{t('navbar.contact')}</Link>
+          <a href="#" className="text-sm font-bold text-text/40 hover:text-primary transition-colors">{t('landing.privacy', 'سياسة الخصوصية')}</a>
+          <a href="#" className="text-sm font-bold text-text/40 hover:text-primary transition-colors">{t('landing.terms', 'الشروط والأحكام')}</a>
         </div>
       </footer>
     </div>

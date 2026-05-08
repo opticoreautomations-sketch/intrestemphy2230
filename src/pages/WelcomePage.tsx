@@ -2,10 +2,12 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { Atom, Rocket, Sparkles, GraduationCap } from 'lucide-react';
 
 export const WelcomePage: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -66,7 +68,7 @@ export const WelcomePage: React.FC = () => {
             transition={{ delay: 0.3 }}
             className="text-4xl font-bold mb-4 text-text leading-tight"
           >
-            مرحباً بك مجدداً، <span className="text-primary">{user?.full_name?.split(' ')[0]}</span>!
+            {t('welcome.title', 'مرحباً بك مجدداً،')} <span className="text-primary">{user?.full_name?.split(' ')[0]}</span>!
           </motion.h1>
 
           <motion.p 
@@ -75,7 +77,7 @@ export const WelcomePage: React.FC = () => {
             transition={{ delay: 0.6 }}
             className="text-text/70 text-lg mb-8 font-medium italic"
           >
-            "العلم هو ما نعرفه، والفلسفة هي ما لا نعرفه." - برتراند راسل
+            "{t('welcome.quote', 'العلم هو ما نعرفه، والفلسفة هي ما لا نعرفه.')}" - {t('welcome.quoteAuthor', 'برتراند راسل')}
           </motion.p>
 
           <motion.div
@@ -94,11 +96,11 @@ export const WelcomePage: React.FC = () => {
           <div className="flex items-center justify-center gap-6 text-text/40">
             <div className="flex flex-col items-center gap-2">
               <Rocket size={20} className="animate-bounce" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">جاهز للإنطلاق</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest">{t('welcome.ready', 'جاهز للإنطلاق')}</span>
             </div>
             <div className="flex flex-col items-center gap-2">
               <Sparkles size={20} className="animate-pulse" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">استكشف الجديد</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest">{t('welcome.explore', 'استكشف الجديد')}</span>
             </div>
           </div>
         </div>

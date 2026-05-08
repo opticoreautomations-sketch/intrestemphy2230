@@ -5,10 +5,12 @@ import { Play, Video, VideoOff, GraduationCap, ChevronLeft, ArrowRight, FileText
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState<'open' | 'close' | null>(null);
   const [lessons, setLessons] = useState<any[]>([]);
   const [materials, setMaterials] = useState<any[]>([]);
@@ -79,10 +81,10 @@ export const HomePage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-6xl font-bold text-text mb-4"
           >
-            أهلاً بك، <span className="text-primary">{profile?.full_name || 'طالبنا العزيز'}</span>
+            {t('home.welcomeTitle', 'أهلاً بك،')} <span className="text-primary">{profile?.full_name || t('home.dearStudent', 'طالبنا العزيز')}</span>
           </motion.h1>
           <p className="text-text/60 text-lg max-w-2xl mx-auto font-medium">
-            اختر المسار التعليمي الذي ترغب في استكشافه اليوم. رحلة الفيزياء تبدأ من هنا.
+            {t('home.welcomeSubtitle', 'اختر المسار التعليمي الذي ترغب في استكشافه اليوم. رحلة الفيزياء تبدأ من هنا.')}
           </p>
         </header>
 
@@ -100,12 +102,12 @@ export const HomePage: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-bg/80 to-transparent" />
                 </div>
                 <div className="p-8">
-                  <h2 className="text-2xl font-bold mb-4 text-text">فيديو تفاعلي مفتوح</h2>
+                  <h2 className="text-2xl font-bold mb-4 text-text">{t('home.openVideo', 'فيديو تفاعلي مفتوح')}</h2>
                   <p className="text-text/60 mb-6 font-medium">
-                    استكشف المفاهيم الفيزيائية من خلال تجربة فيديو تفاعلية مفتوحة تتيح لك حرية التنقل.
+                    {t('home.openVideoDesc', 'استكشف المفاهيم الفيزيائية من خلال تجربة فيديو تفاعلية مفتوحة تتيح لك حرية التنقل.')}
                   </p>
                   <div className="btn-primary w-full flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
-                    عرض الدروس
+                    {t('home.viewLessons', 'عرض الدروس')}
                     <ChevronLeft size={20} />
                   </div>
                 </div>
@@ -124,12 +126,12 @@ export const HomePage: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-bg/80 to-transparent" />
                 </div>
                 <div className="p-8">
-                  <h2 className="text-2xl font-bold mb-4 text-text">فيديو تفاعلي مغلق</h2>
+                  <h2 className="text-2xl font-bold mb-4 text-text">{t('home.closeVideo', 'فيديو تفاعلي مغلق')}</h2>
                   <p className="text-text/60 mb-6 font-medium">
-                    مسار تعليمي محكم يضمن تسلسل الأفكار وبناء المعرفة خطوة بخطوة.
+                    {t('home.closeVideoDesc', 'مسار تعليمي محكم يضمن تسلسل الأفكار وبناء المعرفة خطوة بخطوة.')}
                   </p>
                   <div className="btn-primary w-full flex items-center justify-center gap-2 shadow-lg shadow-white/10 dark:shadow-none">
-                    عرض الدروس
+                    {t('home.viewLessons', 'عرض الدروس')}
                     <ChevronLeft size={20} />
                   </div>
                 </div>
@@ -139,11 +141,11 @@ export const HomePage: React.FC = () => {
             {profile?.access_open === 0 && profile?.access_close === 0 && (
               <div className="col-span-full glass-card p-12 text-center shadow-xl">
                 <VideoOff size={64} className="mx-auto text-text/10 mb-6" />
-                <h2 className="text-2xl font-bold text-text mb-4">لا يزال مسارك التعليمي قيد الإعداد</h2>
+                <h2 className="text-2xl font-bold text-text mb-4">{t('home.noPathTitle', 'لا يزال مسارك التعليمي قيد الإعداد')}</h2>
                 <p className="text-text/60 max-w-md mx-auto font-medium">
-                  يرجى التواصل مع الإدارة لتفعيل حسابك والبدء في استكشاف الدروس المتاحة.
+                  {t('home.noPathDesc', 'يرجى التواصل مع الإدارة لتفعيل حسابك والبدء في استكشاف الدروس المتاحة.')}
                 </p>
-                <Link to="/contact" className="mt-8 inline-block btn-primary px-8">تواصل معنا</Link>
+                <Link to="/contact" className="mt-8 inline-block btn-primary px-8">{t('home.contactUs', 'تواصل معنا')}</Link>
               </div>
             )}
           </div>

@@ -2,11 +2,15 @@ import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { LogOut, User, LayoutDashboard, BookOpen, Sun, Moon, MessageSquare } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
+import { LogOut, User, LayoutDashboard, BookOpen, Sun, Moon, MessageSquare, Globe } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const { user, isTeacher, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { language, toggleLanguage } = useLanguage();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -27,25 +31,25 @@ export const Navbar: React.FC = () => {
               alt="Logo" 
               className="w-10 h-10 rounded-full object-cover border-2 border-primary/20 group-hover:border-primary transition-colors"
             />
-            <span className="text-primary font-bold text-xl">عالم الفيزياء</span>
+            <span className="text-primary font-bold text-xl">{t('navbar.title', 'عالم الفيزياء')}</span>
           </Link>
           
           <div className="hidden md:flex items-center gap-6">
-            <Link to="/" className="text-text/70 hover:text-primary transition-colors font-medium">الرئيسية</Link>
+            <Link to="/" className="text-text/70 hover:text-primary transition-colors font-medium">{t('navbar.home', 'الرئيسية')}</Link>
             {user && isTeacher && (
               <Link to="/admin" className="text-text/70 hover:text-primary transition-colors flex items-center gap-1 font-medium">
                 <LayoutDashboard size={18} />
-                لوحة التحكم
+                {t('navbar.dashboard', 'لوحة التحكم')}
               </Link>
             )}
             <Link to="/contact" className="text-text/70 hover:text-primary transition-colors flex items-center gap-1 font-medium">
               <MessageSquare size={18} />
-              تواصل معنا
+              {t('navbar.contact', 'تواصل معنا')}
             </Link>
             {user && !isTeacher && (
               <Link to="/home" className="text-text/70 hover:text-primary transition-colors flex items-center gap-1 font-medium">
                 <BookOpen size={18} />
-                دروسي
+                {t('navbar.myLessons', 'دروسي')}
               </Link>
             )}
           </div>
@@ -53,9 +57,18 @@ export const Navbar: React.FC = () => {
 
         <div className="flex items-center gap-4">
           <button
+            onClick={toggleLanguage}
+            className="p-2 rounded-xl bg-card border border-border text-text/70 hover:text-primary transition-all active:scale-90 flex flex-row items-center gap-2"
+            title={language === 'ar' ? 'English' : 'عربي'}
+          >
+            <Globe size={20} />
+            <span className="text-xs font-bold">{language === 'ar' ? 'EN' : 'AR'}</span>
+          </button>
+          
+          <button
             onClick={toggleTheme}
             className="p-2 rounded-xl bg-card border border-border text-text/70 hover:text-primary transition-all active:scale-90"
-            title={theme === 'dark' ? 'الوضع المضيء' : 'الوضع المظلم'}
+            title={theme === 'dark' ? t('navbar.lightMode', 'الوضع المضيء') : t('navbar.darkMode', 'الوضع المظلم')}
           >
             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
@@ -66,12 +79,12 @@ export const Navbar: React.FC = () => {
               className="group flex items-center gap-2 bg-card hover:bg-red-500/10 text-text/70 hover:text-red-400 px-4 py-2 rounded-xl transition-all border border-border"
             >
               <LogOut size={18} />
-              <span className="font-medium">تسجيل الخروج</span>
+              <span className="font-medium">{t('navbar.logout', 'تسجيل الخروج')}</span>
             </button>
           ) : (
             <div className="flex items-center gap-2">
-              <Link to="/login" className="text-text/70 hover:text-text px-4 py-2 font-medium">دخول</Link>
-              <Link to="/signup" className="btn-primary px-6 py-2 text-sm">تسجيل</Link>
+              <Link to="/login" className="text-text/70 hover:text-text px-4 py-2 font-medium">{t('navbar.login', 'دخول')}</Link>
+              <Link to="/signup" className="btn-primary px-6 py-2 text-sm">{t('navbar.signup', 'تسجيل')}</Link>
             </div>
           )}
         </div>
