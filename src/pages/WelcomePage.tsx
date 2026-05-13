@@ -45,8 +45,7 @@ export const WelcomePage: React.FC = () => {
       >
         <div className="absolute top-0 left-0 w-full h-40 opacity-80 z-0">
           <img 
-            src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNjlmOTAyOWVhODAwODE5MWJjNjA0NmIzOWYwOTZiNTU6ZmlsZV8wMDAwMDAwMGU4ODQ3MjBjYmE0MDE4MTRkYTM5NWM1ZSIsInRzIjoiMjA1NzciLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6IjQ0ZGVkNmQ5YjgwYWVlZWM0MGY3NjY0NmRhNzBkNTUzYTA3MmJhOTcyNGRlMjJhMGY0YTY0YWY2OTk2NWNjNTYiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJmbiI6bnVsbCwiY2QiOm51bGwsImNwIjpudWxsLCJtYSI6bnVsbH0=" 
-            alt="Welcome Header" 
+            src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNjlmOTAyOWVhODAwODE5MWJjNjA0NmIzOWYwOTZiNTU6ZmlsZV8wMDAwMDAwMGU4ODQ3MjBjYmE0MDE4MTRkYTM5NWM1ZSIsInRzIjoiMjA1ODYiLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6ImVhNjBlYmM0Mzg2OWE4YWJkYThiOTQ4ZDg2NzAxNWJlZWRmNzRiZWZkNGM5MzJiMWU5YjI2MmViYTM2ZTAyZDYiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJmbiI6bnVsbCwiY2QiOm51bGwsImNwIjpudWxsLCJtYSI6bnVsbH0="
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg/95"></div>

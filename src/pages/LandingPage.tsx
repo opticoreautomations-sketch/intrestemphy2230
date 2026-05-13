@@ -69,7 +69,7 @@ export const LandingPage: React.FC = () => {
       <section className="relative pt-32 pb-32 px-4 overflow-hidden min-h-[80vh] flex flex-col items-center justify-center">
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNjlmOTBkMmI1NGIwODE5MTg4NDU2YjU1NTQ3Mjg2ZmI6ZmlsZV8wMDAwMDAwMDgwNmM3MjQ2YmIxYzlmODJiOTFiZDAyMyIsInRzIjoiMjA1NzciLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6ImI5OTFkM2IwMjQ0ZDY4MWY5YjAyMzhkMjYwYTE2NzU2NjM2NjFjYmE4ZWYzNGM5YjQ2NmQ1OTdkN2Y3NzZkZTEiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJmbiI6bnVsbCwiY2QiOm51bGwsImNwIjpudWxsLCJtYSI6bnVsbH0=" 
+            src="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNjlmOTBkMmI1NGIwODE5MTg4NDU2YjU1NTQ3Mjg2ZmI6ZmlsZV8wMDAwMDAwMDgwNmM3MjQ2YmIxYzlmODJiOTFiZDAyMyIsInRzIjoiMjA1ODYiLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6Ijk4NGIyN2ZkMDA3MDE4NGJkNjk3MTQ3OTQzY2U0YjBhYWI2MDNiOGUxODZmM2VjNDBlOGIyOGY2YjQ2MWYxMTYiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcyI6bnVsbCwiY2RuIjpudWxsLCJmbiI6bnVsbCwiY2QiOm51bGwsImNwIjpudWxsLCJtYSI6bnVsbH0="
             alt="Physics Learning" 
             className="w-full h-full object-cover opacity-100 transition-all duration-1000"
           />
